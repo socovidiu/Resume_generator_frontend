@@ -1,28 +1,33 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./auth/ProtectedRoute";
+import GuestRoute from "./auth/GuestRoute";
+import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import CvManager from "./pages/CvManager";
-import Navbar from "./components/Navbar";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 import "./App.css";
 
-const App: React.FC = () => {
+export default function App() {
+  return (
+    <div className="min-h-screen w-screen flex flex-col">
+      <Navbar />
+      <div className="flex-grow container mx-auto mt-20 max-w-screen-lg bg-gray-200 p-6 rounded-lg shadow-md">
+        <Routes>
+          <Route path="/" element={<Home />} />
 
-   
-    return (
-        <div className="min-h-screen min-w-screen flex flex-col ">
-            {/* Navbar */}
-            <Navbar />
+          <Route element={<GuestRoute redirectTo="/" />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+          </Route>
 
-            {/* Content Wrapper (with top padding to prevent overlap) */}
-            <div className="flex-grow container mx-auto mt-20 max-w-screen-lg bg-gray-200 p-6 rounded-lg shadow-md">
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/cvs" element={<CvManager />} />
-                </Routes>
-            </div>
-        </div>
-       
-    );
-};
+          <Route element={<ProtectedRoute redirectTo="/login" />}>
+            <Route path="/cvs" element={<CvManager />} />
+          </Route>
 
-export default App;
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </div>
+  );
+}

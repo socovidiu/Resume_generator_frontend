@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import Button from "../components/ui-elements/Button"
 
 const Home: React.FC = () => {
+
+
     return (
         <div className="min-h-screen flex flex-col justify-center items-center text-white">
             <motion.h1 
