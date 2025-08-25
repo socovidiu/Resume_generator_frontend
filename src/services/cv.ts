@@ -2,8 +2,9 @@ import api from "./http";
 import type { CVResponse, CreateCVRequest, UpdateCVRequest } from "./types";
 
 export async function listCVs(): Promise<CVResponse[]> {
-  const { data } = await api.get<CVResponse[]>("/api/cvs");
-  return data;
+  const res = await api.get<CVResponse[]>("/api/cvs");
+  // Defensive: ensure array
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 export async function getCV(id: string): Promise<CVResponse> {
