@@ -26,13 +26,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   // hydrate from localStorage on first load
   useEffect(() => {
-    const saved = localStorage.getItem("auth_session");
-    if (saved) {
-      try {
-        const { token: t, user: u } = JSON.parse(saved);
-        if (t) setToken(t);
-        if (u) setUser(u);
-      } catch {}
+    const token = localStorage.getItem("auth_token");
+    const userRaw = localStorage.getItem("auth_session");
+    const user = userRaw ? JSON.parse(userRaw) : null;
+    if (token && user) {
+      setToken(token);
+      setUser(user);
     }
     setAuthReady(true);
   }, []);

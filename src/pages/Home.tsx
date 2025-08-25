@@ -21,7 +21,7 @@ const Home: React.FC = () => {
             </p>
 
             <div className="mt-8 flex justify-between w-full max-w-screen-lg px-8">
-                <a href="/cvs">
+                <a href="/managecvs">
                     <Button>Manage CVs</Button>
                 </a>
                 <a href="/about">

@@ -3,9 +3,12 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import GuestRoute from "./auth/GuestRoute";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
-import CvManager from "./pages/CvManager";
+import CvEditPage from "./pages/CvEditPage";
+import CvManager from "./pages/CvManagerPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import DashboardPage from "./pages/Dashboard";
+import ProfilePage from "./pages/ProfilePage";
 import "./App.css";
 
 export default function App() {
@@ -22,7 +25,11 @@ export default function App() {
           </Route>
 
           <Route element={<ProtectedRoute redirectTo="/login" />}>
-            <Route path="/cvs" element={<CvManager />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/cvs" element={<DashboardPage />} />
+            <Route path="/managecvs" element={<CvManager />} />
+            <Route path="/cvs/new" element={<CvEditPage />} />
+            <Route path="/cvs/:id" element={<CvEditPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

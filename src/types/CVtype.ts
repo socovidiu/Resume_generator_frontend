@@ -1,7 +1,5 @@
-export interface LinkItem {
-    type: "LinkedIn" | "GitHub" | "Website";
-    url: string;
-}
+export type LinkType = "LinkedIn" | "GitHub" | "Website";
+export type LinkItem = { type: LinkType; url: string };
 
 export interface CVData {
     firstName: string;
@@ -31,10 +29,7 @@ export interface CVData {
         endDate?: string;
     }[];
 
-    links: {
-        type: "LinkedIn" | "GitHub" | "Website";
-        url: string;
-    }[];
+    links: LinkItem[];
 
     colorHex?: string;
     borderStyle?: "square" | "circle" | "rounded";

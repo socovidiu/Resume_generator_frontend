@@ -18,3 +18,37 @@ export const resumeTemplates = {
         text: "text-sm text-gray-200",
     }
 };
+
+
+// Example
+const resumeData = {
+    firstName: "John",
+    lastName: "Doe",
+    jobTitle: "Software Engineer",
+    city: "Bucharest",
+    country: "Romania",
+    phone: "123-456-789",
+    email: "john.doe@example.com",
+    photo: null, // This can be a base64 string, file object, or null if no photo is uploaded.
+    colorHex: "#3b82f6", // Default color theme for the CV (blue here) 
+    summary: "Experienced software engineer with expertise in building scalable web applications.",
+    workExperiences: [
+        {
+            position: "Frontend Developer",
+            company: "TechCorp",
+            startDate: "2022-01-01",
+            endDate: "2024-01-01",
+            description: "Built and maintained the company's front-end platform using React and Tailwind CSS."
+        }
+    ],
+    educations: [
+        {
+            degree: "Bachelor of Computer Science",
+            school: "University of Bucharest",
+            startDate: "2018-09-01",
+            endDate: "2022-06-15"
+        }
+    ],
+    skills: ["React", "TypeScript", "Tailwind CSS", "Git"]
+};
+const steps = ["Contact Info", "Summary", "Work Experience", "Education", "Skills"];
