@@ -1,15 +1,18 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { updateUser } from "../services/user";
 import { deleteUser } from "../services/user";
 
 const ProfilePage: React.FC = () => {
-    const { user, setSession, token } = useAuth();
+    const { user, setSession, clearSession, token } = useAuth();
     const [username, setUsername] = useState(user?.username || "");
     const [email, setEmail] = useState(user?.email || "");
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const navigate = useNavigate();
 
     if (!user) {
         return (
@@ -44,6 +47,8 @@ const ProfilePage: React.FC = () => {
         try {
             await deleteUser(user.id);
             // then clear session + navigate to /signup or /login
+            clearSession();
+            navigate("/", { replace: true });
         } catch (e: any) {
             setError(e.message || "Could not delete account");
         }

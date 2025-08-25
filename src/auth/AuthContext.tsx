@@ -1,19 +1,16 @@
+// src/auth/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-type UseDatar = {
-  id: string;
-  username: string;
-  email: string;
-};
+import type { UserResponse } from "../services/types";
+import { logout as apiLogout } from "../services/auth";
 
 type AuthState = {
   token: string | null;
-  user: UseDatar | null;
-  isAuthReady: boolean; // to prevent route flicker
+  user: UserResponse | null;
+  isAuthReady: boolean;
 };
 
 type AuthContextType = AuthState & {
-  setSession: (token: string, user: UseDatar) => void;
+  setSession: (token: string, user: UserResponse) => void;
   clearSession: () => void;
 };
 
@@ -21,33 +18,37 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<UseDatar | null>(null);
+  const [user, setUser] = useState<UserResponse | null>(null);
   const [isAuthReady, setAuthReady] = useState(false);
 
-  // hydrate from localStorage on first load
+  // Hydrate once on app start
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    const userRaw = localStorage.getItem("auth_session");
-    const user = userRaw ? JSON.parse(userRaw) : null;
-    if (token && user) {
-      setToken(token);
-      setUser(user);
+    const t = localStorage.getItem("auth_token");
+    const uRaw = localStorage.getItem("auth_session");
+    const u: UserResponse | null = uRaw ? JSON.parse(uRaw) : null;
+
+    if (t && u) {
+      setToken(t);
+      setUser(u);
     }
     setAuthReady(true);
   }, []);
 
-  const setSession = (t: string, u: UseDatar) => {
+  // Persist both, store user-only in auth_session
+  const setSession = (t: string, u: UserResponse) => {
     setToken(t);
     setUser(u);
-    localStorage.setItem("auth_session", JSON.stringify({ token: t, user: u }));
-    localStorage.setItem("auth_token", t); // keep for axios interceptor re-use
+    localStorage.setItem("auth_token", t);
+    localStorage.setItem("auth_session", JSON.stringify(u));
+    // No need to set Axios header here; request interceptor reads from localStorage,
+    // and services/auth.ts sets defaults on login/signup. 
   };
 
+  // Single source of truth: call services/auth.ts → logout()
   const clearSession = () => {
+    apiLogout(); // clears auth_token, auth_session, and axios default header. 
     setToken(null);
     setUser(null);
-    localStorage.removeItem("auth_session");
-    localStorage.removeItem("auth_token");
   };
 
   const value = useMemo(

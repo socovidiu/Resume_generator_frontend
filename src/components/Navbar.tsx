@@ -31,7 +31,7 @@ export default function Navbar() {
             key="logout"
             onClick={() => {
                 clearSession();
-                navigate("/login");
+                navigate("/");
             }}
             className="w-full text-left px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
             >

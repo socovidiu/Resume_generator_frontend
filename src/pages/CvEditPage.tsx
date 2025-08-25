@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 
-// UI blocks you already have
+// UI blocks
 import ContactInfo from "../components/ui-resumebuilder/ContactInfo";
 import Summary from "../components/ui-resumebuilder/Summary";
 import WorkExperience from "../components/ui-resumebuilder/WorkExperience";
@@ -16,23 +16,28 @@ import ErrorBoundary from "../components/ErrorBoundary";
 
 // Data / services
 import { resumeTemplates } from "../CV templates/resumeTemplates";
-import type { CVData } from "../types/CVtype"; // your local type used by the form/preview
-import { createCV, getCV, updateCV } from "../services/cv"; // from services we set up earlier
+import type { CVData } from "../types/CVtype";
+import { createCV, getCV, updateCV } from "../services/cv";
 import type { CVResponse } from "../services/types";
 
-// ---------- Step labels ----------
-const steps = ["Contact Info", "Summary", "Work Experience", "Education", "Skills"];
+// ---------- Steps ----------
+const steps = ["Contact Info", "Summary", "Work Experience", "Education", "Skills"] as const;
 
-
-// ---------- Link types and initial form defaults ----------
+// ---------- Helpers ----------
 const LINK_TYPES = ["LinkedIn", "GitHub", "Website"] as const;
 type LinkType = (typeof LINK_TYPES)[number];
-
 function asLinkType(t: string): LinkType {
-  return (LINK_TYPES as readonly string[]).includes(t) ? (t as LinkType) : "Website";
+  return (LINK_TYPES as readonly string[]).includes(t as any) ? (t as LinkType) : "Website";
 }
 
-// ---------- Initial form defaults ----------
+
+// format for API (ISO)
+function toISO(dateStr?: string | null): string | undefined {
+  if (!dateStr) return undefined;
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+// ---------- Initial form values ----------
 const INITIAL_FORM: CVData = {
   firstName: "",
   lastName: "",
@@ -42,29 +47,27 @@ const INITIAL_FORM: CVData = {
   postcode: "",
   phone: "",
   email: "",
-  photo: null,               // base64 or null
-  colorHex: "#3b82f6",       // used only by preview/UI
-  borderStyle: "rounded",    // used only by preview/UI
+  photo: null,
   summary: "",
-  workExperiences: [
-    // { position:"", company:"", startDate:"", endDate:"", description:"" }
-  ],
-  educations: [
-    // { degree:"", school:"", startDate:"", endDate:"" }
-  ],
+  workExperiences: [],
+  educations: [],
   skills: [],
-  links: [],                 // if your UI collects them; otherwise leave []
+  links: [], // managed by RHF (ContactInfo)
 };
 
 const CvEditPage: React.FC = () => {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isNew = !params.id || params.id === "new";
+
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof resumeTemplates>("classic");
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!isNew);
   const [error, setError] = useState<string | null>(null);
+
+  // photo preview lives here; ContactInfo syncs it to the form via setValue("photo", ...)
+  const [photo, setPhoto] = useState<string | null>(null);
 
   const {
     register,
@@ -74,7 +77,9 @@ const CvEditPage: React.FC = () => {
     reset,
     control,
     formState: { errors },
-  } = useForm<CVData>({ defaultValues: INITIAL_FORM });
+  } = useForm<CVData>({
+    defaultValues: INITIAL_FORM,
+  });
 
   // live preview
   const formValues = watch();
@@ -90,7 +95,8 @@ const CvEditPage: React.FC = () => {
       try {
         const data = await getCV(params.id!);
         if (!mounted) return;
-        // Map API -> form shape (strings for dates are fine)
+
+        // Map API -> form shape
         const mapped: CVData = {
           firstName: data.firstName ?? "",
           lastName: data.lastName ?? "",
@@ -101,26 +107,26 @@ const CvEditPage: React.FC = () => {
           phone: data.phone ?? "",
           email: data.email ?? "",
           photo: data.photo ?? null,
-          colorHex: "#3b82f6",
-          borderStyle: "rounded",
           summary: data.summary ?? "",
           skills: data.skills ?? [],
-          workExperiences: (data.workExperiences ?? []).map(w => ({
+          workExperiences: (data.workExperiences ?? []).map((w) => ({
             position: w.position ?? "",
             company: w.company ?? "",
-            startDate: (w.startDate as unknown as string) ?? "",
-            endDate: (w.endDate as unknown as string) ?? "",
+            startDate: w.startDate ? w.startDate.slice(0, 10) : "",
+            endDate: w.endDate ? w.endDate.slice(0, 10) : "",
             description: w.description ?? "",
           })),
-          educations: (data.educations ?? []).map(e => ({
+          educations: (data.educations ?? []).map((e) => ({
             degree: e.degree ?? "",
             school: e.school ?? "",
-            startDate: (e.startDate as unknown as string) ?? "",
-            endDate: (e.endDate as unknown as string) ?? "",
+            startDate: e.startDate ? e.startDate.slice(0, 10) : "",
+            endDate: e.endDate ? e.endDate.slice(0, 10) : "",
           })),
-          links: (data.links ?? []).map(l => ({ type: asLinkType(l.type), url: l.url })),
+          links: (data.links ?? []).map((l) => ({ type: asLinkType(l.type), url: l.url })),
         };
+
         reset(mapped);
+        setPhoto(mapped.photo ?? null);
       } catch (e: any) {
         setError(e?.response?.data ?? "Failed to load CV.");
       } finally {
@@ -132,7 +138,7 @@ const CvEditPage: React.FC = () => {
     };
   }, [isNew, params.id, reset]);
 
-  // Prepare payload with only backend fields
+  // Prepare payload with only backend fields (ISO dates, no UI extras)
   function toApiPayload(values: CVData) {
     return {
       firstName: values.firstName,
@@ -142,25 +148,24 @@ const CvEditPage: React.FC = () => {
       postcode: values.postcode,
       phone: values.phone,
       email: values.email,
-      photo: values.photo,              // string | null
+      photo: values.photo,
       jobTitle: values.jobTitle,
       summary: values.summary,
       skills: values.skills ?? [],
-      workExperiences: (values.workExperiences ?? []).map(w => ({
+      workExperiences: (values.workExperiences ?? []).map((w) => ({
         position: w.position,
         company: w.company,
-        // Dates: backend expects DateTime; ISO strings are fine
-        startDate: w.startDate ? new Date(w.startDate).toISOString() : new Date().toISOString(),
-        endDate: w.endDate ? new Date(w.endDate).toISOString() : null,
+        startDate: toISO(w.startDate)!,
+        endDate: toISO(w.endDate),
         description: w.description,
       })),
-      educations: (values.educations ?? []).map(e => ({
+      educations: (values.educations ?? []).map((e) => ({
         degree: e.degree,
         school: e.school,
-        startDate: e.startDate ? new Date(e.startDate).toISOString() : new Date().toISOString(),
-        endDate: e.endDate ? new Date(e.endDate).toISOString() : null,
+        startDate: toISO(e.startDate)!,
+        endDate: toISO(e.endDate),
       })),
-      links: (values.links ?? []).map(l => ({ type: l.type, url: l.url })),
+      links: (values.links ?? []).map((l) => ({ type: l.type, url: l.url })),
     };
   }
 
@@ -170,21 +175,14 @@ const CvEditPage: React.FC = () => {
     try {
       const payload = toApiPayload(values);
       let saved: CVResponse;
+
       if (isNew) {
         saved = await createCV(payload);
-        // go to the newly created CV editor
         navigate(`/cvs/${saved.id}`, { replace: true });
       } else {
         saved = await updateCV(params.id!, payload);
-        // keep user here, but refresh form with whatever backend returns
-        reset({
-          ...values,
-          // keep UI-only fields as-is
-          ...{
-            colorHex: formValues.colorHex,
-            borderStyle: formValues.borderStyle,
-          },
-        });
+        // reset the form with what the user has (or you can map back from `saved`)
+        reset(values);
       }
     } catch (e: any) {
       setError(e?.response?.data?.message ?? "Save failed.");
@@ -193,7 +191,7 @@ const CvEditPage: React.FC = () => {
     }
   }
 
-  // Button handlers for stepper
+  // Stepper handlers
   const goBack = () => setCurrentStep((s) => Math.max(0, s - 1));
   const goNext = () =>
     handleSubmit((data) => {
@@ -216,7 +214,7 @@ const CvEditPage: React.FC = () => {
     <div className="flex w-full min-h-screen">
       {/* Left: form/steps */}
       <div className="w-full p-8 bg-white flex flex-col justify-center">
-        <StepProgressBar steps={steps} currentStep={currentStep} />
+        <StepProgressBar steps={[...steps]} currentStep={currentStep} />
 
         {error && (
           <div className="mt-3 mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-red-700">
@@ -229,19 +227,16 @@ const CvEditPage: React.FC = () => {
             register={register}
             errors={errors}
             handleSubmit={handleSubmit}
+            control={control}
+            setValue={setValue}
             onSubmit={onSubmit}
-            photo={formValues.photo ?? null}
-            setPhoto={(v: string | null) => setValue("photo", v)}
+            photo={photo}
+            setPhoto={setPhoto}
           />
         )}
 
         {currentStep === 1 && (
-          <Summary
-            register={register}
-            errors={errors}
-            handleSubmit={handleSubmit}
-            onSubmit={onSubmit}
-          />
+          <Summary register={register} errors={errors} handleSubmit={handleSubmit} onSubmit={onSubmit} />
         )}
 
         {currentStep === 2 && (
@@ -282,7 +277,6 @@ const CvEditPage: React.FC = () => {
           </Button>
 
           <div className="flex items-center gap-3">
-            {/* explicit Save button (doesn't move steps) */}
             <Button
               type="button"
               onClick={handleSubmit(onSubmit)}
@@ -305,9 +299,7 @@ const CvEditPage: React.FC = () => {
           <select
             className="p-2 border rounded-lg bg-gray-100"
             value={selectedTemplate}
-            onChange={(e) =>
-              setSelectedTemplate(e.target.value as keyof typeof resumeTemplates)
-            }
+            onChange={(e) => setSelectedTemplate(e.target.value as keyof typeof resumeTemplates)}
           >
             <option value="classic">Classic</option>
             <option value="modern">Modern</option>

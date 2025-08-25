@@ -1,14 +1,26 @@
+// services/types.ts
+
 // Auth
 export type LoginRequest = { username: string; password: string };
 export type SignUpRequest = { username: string; email: string; password: string };
 export type UserResponse = { id: string; username: string; email: string };
 export type AuthResponse = { message: string; token?: string; user?: UserResponse };
 
+//  (used by PUT /api/users/{id})
+export type UpdateUserRequest = {
+  username: string;
+  email: string;
+  password?: string; // omit/empty to keep password server-side
+};
+
+// localStorage "auth_session"
+export type AuthSession = UserResponse;
+
 // CVs
 export type WorkExperience = {
   position: string;
   company: string;
-  startDate: string;   // ISO string
+  startDate: string;
   endDate?: string | null;
   description: string;
 };
@@ -16,15 +28,12 @@ export type WorkExperience = {
 export type Education = {
   degree: string;
   school: string;
-  startDate: string;   // ISO string
+  startDate: string;
   endDate?: string | null;
 };
 
-export type Link = {
-  // backend expects string union like "LinkedIn" | "GitHub" | "Website"
-  type: string;
-  url: string;
-};
+export type LinkType = "LinkedIn" | "GitHub" | "Website";
+export type Link = { type: LinkType; url: string };
 
 export type CVBase = {
   firstName: string;
@@ -45,5 +54,4 @@ export type CVBase = {
 
 export type CreateCVRequest = CVBase;
 export type UpdateCVRequest = CVBase;
-
 export type CVResponse = CVBase & { id: string };

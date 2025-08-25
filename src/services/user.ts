@@ -1,19 +1,6 @@
-// src/services/user.ts
+// services/user.ts
 import api from "./http";
-
-export type User = {
-  id: string;
-  username: string;
-  email: string;
-};
-
-export type UpdateUserRequest = {
-  username: string;
-  email: string;
-  password?: string; // omit/empty to keep the old password
-};
-
-export type UserResponse = User;
+import type { UserResponse, UpdateUserRequest } from "./types";
 
 function getError(err: any): Error {
   const msg =
@@ -24,7 +11,6 @@ function getError(err: any): Error {
   return new Error(typeof msg === "string" ? msg : "Request failed");
 }
 
-/** GET /api/users/{id} — must match the JWT subject */
 export async function getUser(id: string): Promise<UserResponse> {
   try {
     const { data } = await api.get<UserResponse>(`/api/users/${id}`);
@@ -34,7 +20,6 @@ export async function getUser(id: string): Promise<UserResponse> {
   }
 }
 
-/** PUT /api/users/{id} */
 export async function updateUser(
   id: string,
   payload: UpdateUserRequest
@@ -47,7 +32,6 @@ export async function updateUser(
   }
 }
 
-/** DELETE /api/users/{id} */
 export async function deleteUser(id: string): Promise<void> {
   try {
     await api.delete(`/api/users/${id}`);

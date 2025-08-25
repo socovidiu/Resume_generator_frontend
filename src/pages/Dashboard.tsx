@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { logout } from "../services/auth";
 
 const DashboardPage: React.FC = () => {
   const { user, clearSession } = useAuth();
@@ -22,7 +21,6 @@ const DashboardPage: React.FC = () => {
     try {
       setIsLoggingOut(true);
       clearSession();
-      navigate("/", { replace: true });
     } finally {
       setIsLoggingOut(false);
     }

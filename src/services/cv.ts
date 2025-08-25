@@ -13,11 +13,15 @@ export async function getCV(id: string): Promise<CVResponse> {
 }
 
 export async function createCV(payload: CreateCVRequest): Promise<CVResponse> {
+  
+  console.log("create/update payload", payload.links);
   const { data } = await api.post<CVResponse>("/api/cvs", payload);
   return data;
 }
 
 export async function updateCV(id: string, payload: UpdateCVRequest): Promise<CVResponse> {
+  
+  console.log("create/update payload", payload.links);
   const { data } = await api.put<CVResponse>(`/api/cvs/${id}`, payload);
   return data;
 }
