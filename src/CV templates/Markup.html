@@ -1,0 +1,27 @@
+<!-- markup -->
+<header>
+  <h1>{{firstName}} {{lastName}}</h1>
+  <p>{{email}} {{#if phone}} • {{phone}}{{/if}}</p>
+</header>
+
+{{#if summary}}
+<section><h2>Summary</h2><p>{{summary}}</p></section>
+{{/if}}
+
+{{#if skills.length}}
+<section><h2>Skills</h2>
+  <ul>{{#each skills}}<li>{{this}}</li>{{/each}}</ul>
+</section>
+{{/if}}
+
+{{#if experiences.length}}
+<section><h2>Experience</h2>
+  {{#each experiences}}
+    <div class="job">
+      <h3>{{role}} — {{company}}</h3>
+      <p>{{startDate}} – {{endDate}}</p>
+      <ul>{{#each bullets}}<li>{{this}}</li>{{/each}}</ul>
+    </div>
+  {{/each}}
+</section>
+{{/if}}

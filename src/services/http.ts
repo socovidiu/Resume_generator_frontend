@@ -1,7 +1,13 @@
 import axios from "axios";
+import qs from "qs";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "" ,
+  paramsSerializer: {
+    // Produces: tags=a&tags=b (repeat), skips null/undefined
+    serialize: (params) =>
+      qs.stringify(params, { arrayFormat: "repeat", skipNulls: true }),
+  },
 });
 
 // Attach token if present

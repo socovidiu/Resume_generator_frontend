@@ -1,0 +1,6 @@
+/* css */
+h1 { font-size: 28px; font-weight: 600; margin: 0 0 2px; }
+h2 { font-size: 16px; font-weight: 700; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-top: 16px; }
+p, li { font-size: 14px; line-height: 1.6; }
+ul { padding-left: 18px; list-style: disc; }
+.job { margin: 10px 0; }

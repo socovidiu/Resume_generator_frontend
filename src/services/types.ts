@@ -52,6 +52,61 @@ export type CVBase = {
   links: Link[];
 };
 
+// CV Templates
+/** Rendering engine; matches backend enum values. */
+export type Engine = "react-schema" | "markup";
+
+export type LayoutNode =
+  | { type: "header"; fields: string[] }
+  | { type: "section"; title: string; bind?: string; renderer?: "bullets" | "block" }
+  | { type: "twoColumn"; left: LayoutNode[]; right: LayoutNode[] };
+
+export interface TemplateBase {
+  id: string;
+  name: string;
+  description: string;
+  engine: Engine;
+  variables: string[];
+  version: string;
+  tags?: string[];
+  previewImageUrl?: string;
+  isActive: boolean;
+}
+
+
+export interface ReactSchemaTemplate extends TemplateBase {
+  engine: "react-schema";
+  tokens: Record<string, string>;   // Tailwind classes per token key
+  layout: LayoutNode[];
+}
+
+export interface MarkupTemplate extends TemplateBase {
+  engine: "markup";
+  markup: string;                   // HTML with {{…}}
+  css?: string;
+}
+
+export type AnyTemplate = ReactSchemaTemplate | MarkupTemplate;
+/** List item shape returned by GET /api/cv-templates (no engine-specific fields). */
+export type TemplateListItem = Omit<TemplateBase, "variables">;
+/** Full detail shape returned by GET /api/cv-templates/{id}. */
+export type TemplateDetail = AnyTemplate & {
+  createdAt: string; // ISO timestamps from backend
+  updatedAt: string;
+};
+
+/** Filters accepted by GET /api/cv-templates. */
+export interface ListFilters {
+  engine?: Engine;
+  activeOnly?: boolean;
+  search?: string;
+  tags?: string[];
+}
+
+
+// API responses
 export type CreateCVRequest = CVBase;
 export type UpdateCVRequest = CVBase;
 export type CVResponse = CVBase & { id: string };
+
+export type TemplateResponse = AnyTemplate;
