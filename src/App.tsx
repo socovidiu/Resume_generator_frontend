@@ -9,13 +9,14 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
+import TemplatePlayground from "./pages/TemplatePlayground";
 import "./App.css";
 
 export default function App() {
   return (
-    <div className="min-h-screen w-screen flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-grow container mx-auto mt-20 max-w-screen-lg bg-gray-200 p-6 rounded-lg shadow-md">
+      <div className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
 
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/cvs/new" element={<CvEditPage />} />
             <Route path="/cvs/:id" element={<CvEditPage />} />
           </Route>
+          <Route path="/template-playground" element={<TemplatePlayground />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

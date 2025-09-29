@@ -1,18 +1,17 @@
 #root {
   min-height: 100vh;
   width: 100vw; /* Fix the width to viewport */
-  max-width: 100vw; /* Ensure it doesn't overflow */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   padding: 0;
   text-align: center;
-  overflow-x: hidden; /* Prevents horizontal scrolling */
+  overflow-x: hidden;
 }
 
 html, body {
-  min-width: 1280px;
+  min-width: 12p80px;
   height: 100vh; /* Ensure it fills the viewport */
   width: 100vw;
   margin: 0;
@@ -26,7 +25,6 @@ html, body {
 
 .container {
   width: 100%; /* Make it fluid */
-  max-width: 1200px; /* Adjust based on design */
   flex-grow: 1; /* Allow it to expand */
   margin: 0 auto; /* Center content */
   padding: 16px;

@@ -7,7 +7,7 @@ const Home: React.FC = () => {
 
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center text-white">
+        <div className="min-h-screen flex flex-col justify-center items-center text-black">
             <motion.h1 
               className="text-5xl font-bold mb-4"
               initial={{ opacity: 0, y: -20 }}
@@ -20,7 +20,7 @@ const Home: React.FC = () => {
                 Create, edit, and manage your CVs with ease. Start building your professional career today!
             </p>
 
-            <div className="mt-8 flex justify-between w-full max-w-screen-lg px-8">
+            <div className="mt-8 flex justify-between w-full sm:px-8">
                 <a href="/managecvs">
                     <Button>Manage CVs</Button>
                 </a>

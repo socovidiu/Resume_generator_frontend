@@ -49,8 +49,8 @@ export default function Navbar() {
 
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-gray-950/5">
-        <nav className="px-4 sm:px-6">
-            <div className="mx-auto max-w-7xl h-16 flex items-center justify-between">
+        <nav className="w-full">
+            <div className="h-16 w-full flex items-center justify-between px-4 sm:px-6">
             {/* Left: logo */}
             <Link to="/" className="flex items-center gap-2">
                 <img

@@ -9,10 +9,11 @@ import Summary from "../components/ui-resumebuilder/Summary";
 import WorkExperience from "../components/ui-resumebuilder/WorkExperience";
 import Education from "../components/ui-resumebuilder/Education";
 import Skills from "../components/ui-resumebuilder/Skills";
-import ResumePreview from "../components/ui-resumebuilder/ResumePreview";
+import ResumePreview from "../components/ui-preview/ResumePreview";
 import StepProgressBar from "../components/ui-resumebuilder/StepProgressBar";
 import Button from "../components/ui-elements/Button";
 import ErrorBoundary from "../components/ErrorBoundary";
+import TemplatePreview from "../components/ui-preview/TemplatePreview";
 
 // Data / services
 import { resumeTemplates } from "../CV templates/resumeTemplates";
@@ -60,6 +61,7 @@ const CvEditPage: React.FC = () => {
   const navigate = useNavigate();
   const isNew = !params.id || params.id === "new";
 
+  const [renderMode, setRenderMode] = useState<"react" | "markup">("react");
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof resumeTemplates>("classic");
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -306,12 +308,43 @@ const CvEditPage: React.FC = () => {
             <option value="dark">Dark</option>
           </select>
         </div>
+        {/* Render mode selector*/}
+        <div className="mt-4 flex gap-3 text-black">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              checked={renderMode === "react"}
+              onChange={() => setRenderMode("react")}
+            />
+            React Template
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              checked={renderMode === "markup"}
+              onChange={() => setRenderMode("markup")}
+            />
+            Markup Template
+          </label>
+        </div>
       </div>
 
       {/* Right: live preview */}
       <div className="w-full min-h-full p-8 bg-gray-700 flex justify-center items-center">
         <ErrorBoundary>
-          <ResumePreview resumeData={formValues} />
+          {renderMode === "react" ? (
+            <ResumePreview resumeData={formValues} />
+          ) : (
+            <TemplatePreview
+              template={resumeTemplates[selectedTemplate].markup}
+              css={`
+                .resume { width: 210mm; min-height: 297mm; padding: 16mm; }
+                ${resumeTemplates[selectedTemplate].css}
+              `}
+              data={formValues}
+              documentTitle="My_CV"
+            />
+          )}        
         </ErrorBoundary>
       </div>
     </div>

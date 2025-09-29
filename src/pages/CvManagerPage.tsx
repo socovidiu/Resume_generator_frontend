@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { listCVs } from "../services/cv"; 
 import type { CVResponse } from "../services/types";
-import CvCard, { CvCardData } from "../components/cv/CvCard";
-import NewCvCard from "../components/cv/NewCvCard";
+import CvCard, { CvCardData } from "../components/ui-cvmanagement/CvCard";
+import NewCvCard from "../components/ui-cvmanagement/NewCvCard";
 
 export default function CvManager() {
     const [items, setItems] = useState<CVResponse[]>([]);
