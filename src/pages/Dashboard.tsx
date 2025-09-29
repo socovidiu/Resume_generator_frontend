@@ -27,7 +27,7 @@ const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl bg-white shadow-lg rounded-lg">
+    <div className=" p-6 max-w-3xl bg-white shadow-lg rounded-lg">
       <div className="flex items-center gap-4">
         <div className="h-14 w-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
           {user.username?.[0]?.toUpperCase() || "U"}

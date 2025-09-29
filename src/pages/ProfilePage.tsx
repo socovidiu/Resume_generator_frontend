@@ -55,7 +55,7 @@ const ProfilePage: React.FC = () => {
     }
 
     return (
-        <div className="container mx-auto p-6 max-w-lg bg-white shadow-lg rounded-lg">
+        <div className="p-6 max-w-lg bg-white shadow-lg rounded-lg">
         <h1 className="text-2xl font-semibold mb-4">Your Profile</h1>
         <form onSubmit={onSave} className="space-y-4" noValidate>
             <div>

@@ -2,49 +2,36 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Dropdown from "./Dropdown";
 import { useAuth } from "../auth/AuthContext";
+import Button from "./ui-elements/Button";
 
 export default function Navbar() {
 
     const { user, clearSession } = useAuth();
     const navigate = useNavigate();
 
-    // CV dropdown items (blue text)
+    // CV dropdown items 
     const cvItems = [
-        <Link key="ex" to="/exemple-cv" className="block px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-        CV Examples
-        </Link>,
-        <Link key="md" to="/modele-cv" className="block px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-        CV Models
-        </Link>,
+        <Link key="ex" to="/exemple-cv" > CV Examples </Link>,
+        <Link key="md" to="/modele-cv"> CV Models </Link>,
     ];
 
-    // Account dropdown items (blue text)
+    // Account dropdown items 
     const accountItems = user
         ? [
-            <Link key="dash" to="/cvs" className="block px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-            Dashboard
-            </Link>,
-            <Link key="profile" to="/profile" className="block px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-            Profile
-            </Link>,
-            <button
-            key="logout"
-            onClick={() => {
+            <Link key="dash" to="/cvs"> Dashboard </Link>,
+            <Link key="profile" to="/profile" > Profile </Link>,
+            <button key="logout" 
+                onClick={() => {
                 clearSession();
                 navigate("/");
             }}
-            className="w-full text-left px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
             >
             Logout
             </button>,
         ]
         : [
-            <Link key="login" to="/login" className="block px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-            Login
-            </Link>,
-            <Link key="signup" to="/signup" className="block px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-            Sign Up
-            </Link>,
+            <Link key="login" to="/login" > Login </Link>,
+            <Link key="signup" to="/signup" > Sign Up </Link>,
         ];
 
     return (
@@ -59,8 +46,6 @@ export default function Navbar() {
                 className="h-7 sm:h-9"
                 />
             </Link>
-
-        
 
             {/* Right: account + CTA */}
             <div className="flex items-center gap-4">
@@ -97,9 +82,7 @@ export default function Navbar() {
 
                 {/* Primary CTA */}
                 <Link to="/create-resume">
-                <button className="bg-blue-500 text-white font-semibold px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-600 transition">
-                    Create my resume
-                </button>
+                    <Button>Create my resume</Button>  
                 </Link>
             </div>
             </div>

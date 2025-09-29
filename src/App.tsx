@@ -10,7 +10,6 @@ import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
 import TemplatePlayground from "./pages/TemplatePlayground";
-import "./App.css";
 
 export default function App() {
   return (

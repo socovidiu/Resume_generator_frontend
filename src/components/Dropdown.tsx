@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 
 type Align = "left" | "right";
 
+const defaultItemClasses =
+  "block w-full text-left px-5 py-3 text-l leading-7 font-medium " +
+  "text-slate-800 hover:bg-slate-50 hover:text-blue-400 rounded-lg";
+
 export default function Dropdown({
     button,
     items,
@@ -53,13 +57,13 @@ export default function Dropdown({
         {open && (
             <div
             role="menu"
-            className={`absolute z-50 mt-2 min-w-40 rounded-md border bg-white shadow-md ${
-                align === "right" ? "right-0" : "left-0"
-            }`}
+            className={`absolute z-50 ${align === "right" ? "right-0" : "left-0"}
+                mt-2 w-[200px] rounded-2xl bg-white border border-slate-200 shadow-xl`}
             >
-            <ul className="py-1">
+            <ul className="py-2">
                 {items.map((node, i) => (
-                <li key={i} onClick={() => setOpen(false)}>
+                <li key={i} onClick={() => setOpen(false)}
+                    className={defaultItemClasses}>
                     {node}
                 </li>
                 ))}
