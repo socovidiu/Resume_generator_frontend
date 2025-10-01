@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { login } from "../services/auth";
-import { useAuth } from "../auth/AuthContext";
+import { login } from "../../services/auth";
+import { useAuth } from "../../auth/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function LoginForm() {

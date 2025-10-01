@@ -1,13 +1,13 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Dropdown from "./Dropdown";
 import { useAuth } from "../auth/AuthContext";
 import Button from "./ui-elements/Button";
+import { useLogout } from "../hooks/useLogout";
 
 export default function Navbar() {
 
     const { user, clearSession } = useAuth();
-    const navigate = useNavigate();
+    const doLogout = useLogout();
 
     // CV dropdown items 
     const cvItems = [
@@ -18,13 +18,11 @@ export default function Navbar() {
     // Account dropdown items 
     const accountItems = user
         ? [
-            <Link key="dash" to="/cvs"> Dashboard </Link>,
+            <Link key="dash" to="/resume"> Dashboard </Link>,
             <Link key="profile" to="/profile" > Profile </Link>,
             <button key="logout" 
-                onClick={() => {
-                clearSession();
-                navigate("/");
-            }}
+                onClick={() => doLogout({ confirm: true })}
+
             >
             Logout
             </button>,
@@ -81,7 +79,7 @@ export default function Navbar() {
                 )}
 
                 {/* Primary CTA */}
-                <Link to="/create-resume">
+                <Link to="/resume/new">
                     <Button>Create my resume</Button>  
                 </Link>
             </div>

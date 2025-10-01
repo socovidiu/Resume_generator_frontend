@@ -13,7 +13,7 @@ export default function CvCard({ cv }: { cv: CvCardData }) {
 
   return (
     <button
-      onClick={() => navigate(`/cvs/${cv.id}`)}
+      onClick={() => navigate(`/resume/${cv.id}`)}
       className="group w-full text-left rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition shadow-sm hover:shadow-md overflow-hidden"
     >
       {/* Thumbnail / placeholder */}

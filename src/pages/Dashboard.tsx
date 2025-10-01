@@ -1,83 +1,208 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useLogout } from "../hooks/useLogout";
 
-const DashboardPage: React.FC = () => {
-  const { user, clearSession } = useAuth();
+type ResumeItem = {
+  id: string;
+  title: string;
+  updatedAt: string; // ISO
+  template: string;
+};
+
+const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const doLogout = useLogout();
 
-  if (!user) {
-    return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <p className="text-lg text-gray-700 animate-pulse">Loading your dashboard…</p>
-      </div>
-    );
-  }
+  // TODO: wire these with API later
+  const [loading, setLoading] = useState(false);
+  const resumes: ResumeItem[] = []; // put mock data here while wiring
 
-  const onLogout = async () => {
-    const ok = window.confirm("Are you sure you want to log out?");
-    if (!ok) return;
-    try {
-      setIsLoggingOut(true);
-      clearSession();
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  const name = useMemo(() => {
+    const raw = user?.username || user?.email || "there";
+    return raw.split("@")[0];
+  }, [user]);
+
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+  }, []);
+
 
   return (
-    <div className=" p-6 max-w-3xl bg-white shadow-lg rounded-lg">
-      <div className="flex items-center gap-4">
-        <div className="h-14 w-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-          {user.username?.[0]?.toUpperCase() || "U"}
-        </div>
-        <div>
-          <h1 className="text-2xl font-semibold">Welcome, {user.username}</h1>
-          <p className="text-gray-500">{user.email}</p>
-        </div>
-      </div>
+    <div className="min-h-[calc(100vh-4rem)] w-full bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+        {/* Header */}
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 shrink-0 rounded-full bg-indigo-600 text-white grid place-items-center font-semibold">
+              {name.slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {greeting}, {name} 👋
+              </h1>
+              <p className="text-gray-600">Build, edit, and export your resumes.</p>
+            </div>
+          </div>
 
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Link
-          to="/cvs/new"
-          className="block rounded-lg border bg-blue-50 hover:bg-blue-100 transition p-4 text-center font-medium"
-        >
-          ➕ Create new CV
-        </Link>
-        <Link
-          to="/managecvs"
-          className="block rounded-lg border bg-blue-50 hover:bg-blue-100 transition p-4 text-center font-medium"
-        >
-          🗂️ Manage my CVs
-        </Link>
-        <Link
-          to="/profile"
-          className="block rounded-lg border bg-blue-50 hover:bg-blue-100 transition p-4 text-center font-medium"
-        >
-          👤 Profile & settings
-        </Link>
-      </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/templates")}
+              className="rounded-lg border px-3 py-2 text-sm hover:bg-white"
+            >
+              Browse templates
+            </button>
+            <button
+              onClick={() => navigate("/resume/new")}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            >
+              + Create resume
+            </button>
+          </div>
+        </div>
 
-      <div className="mt-8 flex flex-col sm:flex-row gap-3">
-        <button
-          onClick={() => navigate("/profile")}
-          className="w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Edit Profile
-        </button>
-        <button
-          onClick={onLogout}
-          disabled={isLoggingOut}
-          className={`w-full sm:w-auto px-4 py-2 rounded text-white ${
-            isLoggingOut ? "bg-red-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600"
-          }`}
-        >
-          {isLoggingOut ? "Logging out…" : "Logout"}
-        </button>
+        {/* Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Recent resumes */}
+          <section className="lg:col-span-8">
+            <div className="rounded-2xl border bg-white shadow-sm">
+              <div className="flex items-center justify-between p-4 sm:p-5 border-b">
+                <h2 className="text-base sm:text-lg font-semibold">Recent resumes</h2>
+                <button
+                  onClick={() => navigate("/resumes")}
+                  className="text-sm text-indigo-600 hover:underline"
+                >
+                  View all
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 sm:p-5">
+                {loading ? (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="rounded-lg border p-4 animate-pulse">
+                        <div className="h-4 w-1/2 bg-gray-200 rounded mb-2" />
+                        <div className="h-3 w-1/3 bg-gray-200 rounded mb-5" />
+                        <div className="h-8 w-full bg-gray-200 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                ) : resumes.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-indigo-50 grid place-items-center">
+                      <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
+                      </svg>
+                    </div>
+                    <h3 className="font-semibold text-gray-900">Create your first resume</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      You don’t have any resumes yet.
+                    </p>
+                    <button
+                      onClick={() => navigate("/resume/new")}
+                      className="mt-4 inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                    >
+                      Get started
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {resumes.map((r) => (
+                      <article key={r.id} className="rounded-lg border p-4 hover:shadow transition">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-medium text-gray-900">{r.title}</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Updated {new Date(r.updatedAt).toLocaleString()}
+                            </p>
+                          </div>
+                          <span className="text-xs rounded-full border px-2 py-0.5 text-gray-600">
+                            {r.template}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => navigate(`/resume/${r.id}/edit`)}
+                            className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => navigate(`/resume/${r.id}/preview`)}
+                            className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                          >
+                            Preview
+                          </button>
+                          <button
+                            onClick={() => navigate(`/resume/${r.id}/export`)}
+                            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700"
+                          >
+                            Export PDF
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Right rail */}
+          <aside className="lg:col-span-4 space-y-6">
+            {/* Templates spotlight */}
+            <div className="rounded-2xl border bg-white shadow-sm">
+              <div className="p-4 sm:p-5 border-b">
+                <h2 className="text-base sm:text-lg font-semibold">Templates spotlight</h2>
+              </div>
+              <div className="p-4 sm:p-5">
+                <div className="flex gap-4 overflow-x-auto pb-1">
+                  {["Classic", "Modern", "Compact"].map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => navigate(`/templates?pick=${encodeURIComponent(t)}`)}
+                      className="min-w-[160px] rounded-xl border aspect-[3/4] overflow-hidden hover:shadow transition grid place-items-center"
+                    >
+                      <span className="text-sm text-gray-700">{t}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Account card */}
+            <div className="rounded-2xl border bg-white shadow-sm">
+              <div className="p-4 sm:p-5">
+                <h3 className="font-semibold text-gray-900">Account</h3>
+                <p className="text-sm text-gray-600 mt-1 break-all">{user?.email}</p>
+
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => navigate("/profile")}
+                    className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                  >
+                    Profile settings
+                  </button>
+                  <button
+                    onClick={() => doLogout({ confirm: true })}
+                    className="rounded-md bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 text-sm"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );
 };
 
-export default DashboardPage;
+export default Dashboard;

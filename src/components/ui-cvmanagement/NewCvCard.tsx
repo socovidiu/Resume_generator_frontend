@@ -5,7 +5,7 @@ export default function NewCvCard() {
   const navigate = useNavigate();
   return (
     <button
-      onClick={() => navigate("/cvs/new")}
+      onClick={() => navigate("/resume/new")}
       className="w-full rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 bg-white hover:bg-blue-50/40 transition grid place-items-center aspect-[3/4] shadow-sm"
     >
       <div className="text-center">

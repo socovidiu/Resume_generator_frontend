@@ -1,26 +1,31 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import LoginForm from "../components/LoginForm";
+import LoginForm from "../components/forms/LoginForm";
 
 const LoginPage: React.FC = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-sm mx-auto">
-        <h2 className="text-xl font-bold text-center mb-4">Login</h2>
-        <LoginForm />
-        <div className="text-center mt-4">
-          <p className="text-gray-600">Don't have an account?</p>
-          <button
-            onClick={() => navigate("/signup")}
-            className="text-blue-600 hover:underline"
-            type="button"
-          >
-            Sign Up
-          </button>
-        </div>
+  return (
+    <>
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl font-bold">Sign in</h1>
+        <p className="text-sm text-gray-600 mt-1">Welcome back — let’s get to work.</p>
       </div>
-    );
+
+      <LoginForm />
+
+      <p className="mt-6 text-center text-sm text-gray-600">
+        Don’t have an account?{" "}
+        <button
+          type="button"
+          onClick={() => navigate("/signup")}
+          className="text-indigo-600 hover:underline"
+        >
+          Create one
+        </button>
+      </p>
+    </>
+  );
 };
 
 export default LoginPage;

@@ -46,7 +46,6 @@ const ResumePreview: React.FC<{ resumeData: CVData }> = ({ resumeData }) => {
         className="mb-4"
       />
 
-      {/* Scroll wrapper is fine, but ref should be on the page */}
       <div className="overflow-auto bg-gray-100 rounded-xl p-6">
         <div className="flex justify-center">
           <div ref={pageRef} style={pageStyle} className="print:shadow-none print:bg-white">
