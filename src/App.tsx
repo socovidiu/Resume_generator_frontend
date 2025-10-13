@@ -9,7 +9,6 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
-import TemplatePlayground from "./pages/TemplatePlayground";
 import AuthLayout from "./layouts/AuthLayout";
 
 
@@ -75,7 +74,6 @@ export default function App() {
           <Route path="/resume/new" element={<CvEditPage />} />
           <Route path="/resume/:id" element={<CvEditPage />} />
         </Route>
-        <Route path="/template-playground" element={<TemplatePlayground />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -5,7 +5,7 @@ import PreviewUtils, { PaperSize } from "./PreviewUtils";
 import { ReactSchemaView } from "../template-engine/reactSchema";
 import { cvLayout, tokens } from "../template-engine/cvLayout";
 
-const ResumePreview: React.FC<{ resumeData: CVData }> = ({ resumeData }) => {
+const ResumePreview: React.FC<{ resumeData: CVData, template: string }> = ({ resumeData }) => {
   // Put the ref on the *page* element we want to print
   const pageRef = useRef<HTMLDivElement>(null);
   const data = { ...resumeData, tokens };
