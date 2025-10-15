@@ -22,6 +22,8 @@ function Shell({ children }: { children: React.ReactNode }) {
     "/signup",
     "/dashboard",
     "/profile",
+    "/resume/new",
+    "/resume/:id",
     // add more like "/forgot-password" if you add them later
   ].some((pattern) => matchPath({ path: pattern, end: true }, location.pathname));
 
@@ -30,11 +32,11 @@ function Shell({ children }: { children: React.ReactNode }) {
       <Navbar />
       {edgeToEdge ? (
         // No container / gray background on auth pages
-        <div className="min-h-[calc(100vh-4rem)]">{children}</div>
+        <div className="min-h-[calc(100vh-4rem)] overflow-hidden">{children}</div>
       ) : (
         // Default app shell
-        <div className="min-h-[calc(100vh-4rem)] bg-gray-50">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">{children}</div>
+        <div className="min-h-[calc(100vh-4rem)] bg-gray-300">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">{children}</div>  
         </div>
       )}
     </>
@@ -69,7 +71,7 @@ export default function App() {
 
         <Route element={<ProtectedRoute redirectTo="/login" />}>
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/resume" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/resumes" element={<CvManager />} />
           <Route path="/resume/new" element={<CvEditPage />} />
           <Route path="/resume/:id" element={<CvEditPage />} />

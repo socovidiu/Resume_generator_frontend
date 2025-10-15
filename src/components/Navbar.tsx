@@ -18,7 +18,7 @@ export default function Navbar() {
     // Account dropdown items 
     const accountItems = user
         ? [
-            <Link key="dash" to="/resume"> Dashboard </Link>,
+            <Link key="dash" to="/dashboard"> Dashboard </Link>,
             <Link key="profile" to="/profile" > Profile </Link>,
             <button key="logout" 
                 onClick={() => doLogout({ confirm: true })}
