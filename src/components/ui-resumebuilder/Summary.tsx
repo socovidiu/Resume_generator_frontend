@@ -13,12 +13,14 @@ const Summary: React.FC<SummaryProps> = ({ register, errors, handleSubmit, onSub
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col items-center bg-gray-100 text-black p-6 rounded-lg shadow-md w-full"
+            className="form-shell"
         >
             <h2 className="text-2xlfont-bold mb-4">Professional Summary</h2>
 
-            {/* Job tytle */}
-            <div className="w-full">
+
+            <div className="form-section">
+                {/* Job tytle */}
+                <div>
                 <label className="block text-xs  text-left  font-semibold">Job Tytle</label>
                 <textarea
                     {...register("jobTitle", { required: "Job tytle is required" })}
@@ -26,9 +28,9 @@ const Summary: React.FC<SummaryProps> = ({ register, errors, handleSubmit, onSub
                     placeholder="Software Developer"
                 />
                 {errors.summary && <p className="text-red-500 text-xs">{errors.summary.message}</p>}
-            </div>
-            {/* Summary Textarea */}
-            <div className="w-full">
+                </div>
+                {/* Summary Textarea */}
+                <div>
                 <label className="block text-xs  text-left  font-semibold">About me</label>
                 <textarea
                     {...register("summary", { required: "Summary is required" })}
@@ -36,8 +38,8 @@ const Summary: React.FC<SummaryProps> = ({ register, errors, handleSubmit, onSub
                     placeholder="Write a brief professional summary..."
                 />
                 {errors.summary && <p className="text-red-500 text-xs">{errors.summary.message}</p>}
+                </div>
             </div>
-
            
         </form>
     );

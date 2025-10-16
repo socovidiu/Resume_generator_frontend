@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 // ---- Tunables ----
 const GAP = 24;                   // space between columns
-const MIN_FORM = 560;             // keep the form usable
+const MIN_FORM = 680;             // keep the form usable
 const MIN_PREVIEW = 420;          // smallest preview column we tolerate
 const MAX_PREVIEW = Infinity;         // cap on huge screens
 const STICKY_TOP = 0;            // should match your Navbar offset
 const PREVIEW_CARD_VPAD = 48;// preview's top+bottom padding (outer card)
+const MIN_SCALE_TO_KEEP_PREVIEW = 0.60; // if preview would be smaller, drop it
+
 // A4 mm → px @96dpi
 const mmToPx = (mm: number) => (mm * 96) / 25.4;
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
@@ -60,7 +62,6 @@ export default function CvEditLayout({
     const availH = Math.max(0, ch - STICKY_TOP - PREVIEW_CARD_VPAD);
     const availW = Math.max(0, w - 24);
     const scaleToFit = Math.min(availW / PAGE_PX.w, availH / PAGE_PX.h);
-    const MIN_SCALE_TO_KEEP_PREVIEW = 0.70;
 
     if (scaleToFit < MIN_SCALE_TO_KEEP_PREVIEW) {
       return { mode: "one" as const, previewW: 0 };

@@ -1,6 +1,8 @@
 /* Tailwind v4 import */
 @import "tailwindcss";
 
+@import "./styles/forms.css";
+
 /* Minimal base resets that play nice with Tailwind */
 @layer base {
   html, body, #root {

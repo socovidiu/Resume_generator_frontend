@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+
 import {
   UseFormRegister,
   FieldErrors,
@@ -8,6 +9,8 @@ import {
   UseFormSetValue,
 } from "react-hook-form";
 import { CVData } from "../../types/CVtype";
+import { Field, Input, Textarea, Select } from "../ui-elements/Form"; 
+
 
 interface ContactInfoProps {
   register: UseFormRegister<CVData>;
@@ -61,9 +64,14 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
   return (
     <form
       onSubmit={handleSubmit((data) => onSubmit(data))}
-      className="flex flex-col items-center bg-gray-100 text-black p-6 rounded-lg shadow-md w-full"
+      className="form-shell"
     >
-      <h2 className="text-2xl font-bold mb-4">Contact Info</h2>
+      
+      {/* ---------- Header ---------- */}
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
+        <p className="text-sm text-gray-600">Tell us who you are and how to reach you.</p>
+      </div>
 
       {/* Photo Upload */}
       <div className="flex flex-col items-center mt-6">
@@ -89,174 +97,180 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
         />
       </div>
 
-      {/* Grid Layout for Inputs */}
-      <div className="grid grid-cols-2 gap-4 w-full">
-        {/* First Name */}
-        <div>
-          <label className="block text-xs font-semibold">FIRST NAME</label>
-          <input
+      {/* ---------- Basic Info ---------- */}
+      <div className="form-grid">
+        <Field
+          label="First name"
+          htmlFor="firstName"
+          error={errors.firstName?.message as string | undefined}
+        >
+          <Input
+            id="firstName"
+            placeholder="Ada"
+            autoComplete="given-name"
             {...register("firstName", { required: "First name is required" })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            placeholder="First Name"
           />
-          {errors.firstName && (
-            <p className="text-red-500 text-xs">{errors.firstName.message}</p>
-          )}
-        </div>
+        </Field>
 
-        {/* Last Name */}
-        <div>
-          <label className="block text-xs font-semibold">LAST NAME</label>
-          <input
+        <Field
+          label="Last name"
+          htmlFor="lastName"
+          error={errors.lastName?.message as string | undefined}
+        >
+          <Input
+            id="lastName"
+            placeholder="Lovelace"
+            autoComplete="family-name"
             {...register("lastName", { required: "Last name is required" })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            placeholder="Last Name"
           />
-          {errors.lastName && (
-            <p className="text-red-500 text-xs">{errors.lastName.message}</p>
-          )}
-        </div>
+        </Field>
 
-        {/* City */}
-        <div>
-          <label className="block text-xs font-semibold">CITY</label>
-          <input
-            {...register("city", { required: "City is required" })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            placeholder="City"
+        <Field
+          label="City"
+          htmlFor="city"
+          error={errors.city?.message as string | undefined}
+        >
+          <Input id="city" placeholder="London" {...register("city")} />
+        </Field>
+
+        <Field
+          label="Country"
+          htmlFor="country"
+          error={errors.country?.message as string | undefined}
+        >
+          <Input id="country" placeholder="United Kingdom" {...register("country")} />
+        </Field>
+
+        <Field
+          label="Postal Code"
+          htmlFor="postalCode"
+          error={errors.postcode?.message as string | undefined}
+        >
+          <Input id="postalCode" placeholder="E1 6AN" {...register("postcode")} />
+        </Field>
+
+        <Field
+          label="Phone"
+          htmlFor="phone"
+          error={errors.phone?.message as string | undefined}
+        >
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="+44 7123 456789"
+            autoComplete="tel"
+            {...register("phone")}
           />
-          {errors.city && (
-            <p className="text-red-500 text-xs">{errors.city.message}</p>
-          )}
-        </div>
+        </Field>
 
-        {/* County (country field) */}
-        <div>
-          <label className="block text-xs font-semibold">COUNTY</label>
-          <input
-            {...register("country", { required: "County is required" })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            placeholder="County"
-          />
-          {errors.country && (
-            <p className="text-red-500 text-xs">{errors.country.message}</p>
-          )}
-        </div>
-
-        {/* Postcode */}
-        <div>
-          <label className="block text-xs font-semibold">POSTCODE</label>
-          <input
-            {...register("postcode", {
-              required: "Postcode is required",
-              pattern: {
-                value: /^[A-Za-z0-9 ]{3,10}$/,
-                message: "Invalid postcode format",
-              },
-            })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            placeholder="Postcode"
-          />
-          {errors.postcode && (
-            <p className="text-red-500 text-xs">{errors.postcode.message}</p>
-          )}
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label className="block text-xs font-semibold">PHONE</label>
-          <input
-            {...register("phone", {
-              required: "Phone number is required",
-              pattern: { value: /^[0-9]{10,15}$/, message: "Invalid phone number" },
-            })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            placeholder="Phone"
-          />
-          {errors.phone && (
-            <p className="text-red-500 text-xs">{errors.phone.message}</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div className="col-span-2">
-          <label className="block text-xs font-semibold">EMAIL</label>
-          <input
+        <Field
+          label="Email"
+          htmlFor="email"
+          error={errors.email?.message as string | undefined}
+          hint="We’ll never share your email."
+        >
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
             {...register("email", {
               required: "Email is required",
               pattern: {
-                value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
-                message: "Invalid email format",
+                value: /^\S+@\S+\.\S+$/,
+                message: "Enter a valid email address",
               },
             })}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            placeholder="Email"
           />
-          {errors.email && (
-            <p className="text-red-500 text-xs">{errors.email.message}</p>
-          )}
-        </div>
-
-        {/* Links (RHF-managed) */}
-        <div className="col-span-2 space-y-4">
-          <label className="block text-xs font-semibold">LINKS</label>
-
-          {fields.map((field, index) => (
-            <div key={field.id} className="flex gap-2 items-start">
-              <select
-                className="w-1/3 border rounded-md p-2"
-                defaultValue={field.type ?? "LinkedIn"}
-                {...register(`links.${index}.type` as const)}
-              >
-                <option value="LinkedIn">LinkedIn</option>
-                <option value="GitHub">GitHub</option>
-                <option value="Website">Website</option>
-              </select>
-
-              <input
-                type="url"
-                placeholder="https://..."
-                className="w-2/3 border rounded-md p-2"
-                defaultValue={field.url ?? ""}
-                {...register(`links.${index}.url` as const, {
-                  pattern: {
-                    value: /^https?:\/\//i,
-                    message: "URL should start with http:// or https://",
-                  },
-                })}
-              />
-
-              <button
-                type="button"
-                onClick={() => remove(index)}
-                className="text-sm px-2"
-                aria-label="Remove link"
-                title="Remove link"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-
-          <button
-            type="button"
-            onClick={() => append({ type: "LinkedIn", url: "" })}
-            className="mt-2 text-blue-500 hover:underline text-sm"
-          >
-            + Add another link
-          </button>
-        </div>
+        </Field>
       </div>
+      
+      {/* Links (RHF-managed) */}
+      <div className="form-section">
+        <label className="block text-sm font-medium text-gray-800">Links</label>
 
-      {/* Submit lives outside the grid so it’s at the bottom */}
-      <div className="mt-6 w-full">
+        {fields.map((field, index) => {
+          // helpful dynamic id bases for a11y
+          const typeId = `links.${index}.type`;
+          const urlId = `links.${index}.url`;
+          const urlError = (errors as any)?.links?.[index]?.url?.message as string | undefined;
+
+          return (
+            <div
+              key={field.id}
+              className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 md:p-5"
+            >
+              <div className="flex gap-3 items-start">
+                {/* Type select */}
+                <div className="w-30 shrink-0">
+                  <Field label="Type" htmlFor={typeId}>
+                    <Select
+                      id={typeId}
+                      defaultValue={(field as any).type ?? "LinkedIn"}
+                      {...register(`links.${index}.type` as const)}
+                    >
+                      <option value="LinkedIn">LinkedIn</option>
+                      <option value="GitHub">GitHub</option>
+                      <option value="Website">Website</option>
+                    </Select>
+                  </Field>
+                </div>
+
+                {/* URL input with validation + error */}
+                <div className="flex-1">
+                  <Field
+                    label="URL"
+                    htmlFor={urlId}
+                    error={urlError}
+                    hint="Use a full URL starting with http:// or https://"
+                  >
+                    <Input
+                      id={urlId}
+                      type="url"
+                      placeholder={
+                        ((field as any).type ?? "LinkedIn") === "GitHub"
+                          ? "https://github.com/username"
+                          : ((field as any).type ?? "LinkedIn") === "Website"
+                          ? "https://yourdomain.com"
+                          : "https://linkedin.com/in/username"
+                      }
+                      defaultValue={(field as any).url ?? ""}
+                      {...register(`links.${index}.url` as const, {
+                        pattern: {
+                          value: /^https?:\/\//i,
+                          message: "URL should start with http:// or https://",
+                        },
+                      })}
+                    />
+                  </Field>
+                </div>
+
+                {/* Remove button */}
+                <div className="pt-7">
+                  <button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="text-sm text-gray-600 hover:text-red-600 hover:underline"
+                    aria-label={`Remove link ${index + 1}`}
+                    title="Remove link"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
         <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          type="button"
+          onClick={() => append({ type: "LinkedIn", url: "" })}
+          className="text-sm font-medium text-blue-700 hover:text-blue-800 hover:underline"
         >
-          Save & Continue
+          + Add another link
         </button>
       </div>
+
     </form>
   );
 };

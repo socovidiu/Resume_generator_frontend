@@ -151,7 +151,7 @@ export default function CvEditFormPanel({
       {stepNode}
 
       {/* Navigation + Save */}
-      <div className="mt-6 flex items-center justify-between">
+      <div className="form-actions">
         <Button type="button" onClick={goBack} variant="secondary" size="lg">
           BACK
         </Button>
