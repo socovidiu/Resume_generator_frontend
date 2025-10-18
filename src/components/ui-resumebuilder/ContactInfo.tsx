@@ -49,8 +49,9 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
 
   // Keep "photo" in the form state so it is included in payload
   useEffect(() => {
-    setValue("photo", photo ?? null, { shouldValidate: false, shouldDirty: true });
-  }, [photo, setValue]);
+    const clean = photo && photo.trim() !== "" ? photo : null;
+    setValue("photo", clean, { shouldValidate: false, shouldDirty: true });
+}, [photo, setValue]);
 
   // Handle file selection for photo (keeps your preview approach)
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -95,10 +95,10 @@ const Divider: React.FC<{ className?: string }> = ({ className = "" }) => (
   <hr className={`border-gray-200 ${className}`} />
 );
 
-const ImageEl: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
-  // eslint-disable-next-line jsx-a11y/alt-text
-  <img {...props} />
-);
+function ImageEl({ src, alt, ...rest }: { src?: string | null; alt?: string; [k: string]: any }) {
+  if (!src) return null;                 // <- key line: don't render <img> without a src
+  return <img src={src} alt={alt ?? ""} {...rest} />;
+}
 
 // -------- Component map
 const COMPONENTS: Record<
@@ -148,8 +148,11 @@ const COMPONENTS: Record<
   },
   image: ({ node, ctx }) => {
     const props = resolveProps(node.props, ctx.data);
-    return <ImageEl {...props} />;
+    const src = node.props?.src;
+    const alt = node.props?.alt ?? "";
+    return <ImageEl src={src} alt={alt} /* ... */ />;
   },
+  
   divider: ({ node, ctx }) => {
     const { className = "" } = resolveProps(node.props, ctx.data);
     return <Divider className={className} />;

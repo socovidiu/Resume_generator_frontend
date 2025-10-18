@@ -50,7 +50,7 @@ const StepProgressBar: React.FC<StepProgressBarProps> = ({ steps, currentStep })
                         </div>
 
                         {/* Connector Line */}
-                        {index < steps.length && (
+                        {index < steps.length  && (
                             <div className={`w-full h-1 ${isActive ? "bg-orange-500" : "bg-gray-300"}`}></div>
                         )}
                     </div>
