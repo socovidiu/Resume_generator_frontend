@@ -22,11 +22,11 @@ type AsProp = { as?: React.ElementType };
 
 
 // -------- Helpers
-const get = (obj: any, path: string, fallback?: any) => {
+const get = (obj: any, path?: string, fallback?: any) => {
+  if (path === "." || path === "") return obj ?? fallback;   // <-- allow current item
   if (!path) return fallback;
   return path.split(".").reduce((acc, key) => (acc == null ? acc : acc[key]), obj) ?? fallback;
 };
-
 // Replace {{path.to.value}} inside strings with values from data
 const renderTemplateString = (s: string, data: any) =>
   s.replace(/{{\s*([^}]+)\s*}}/g, (_, expr) => {
@@ -148,9 +148,7 @@ const COMPONENTS: Record<
   },
   image: ({ node, ctx }) => {
     const props = resolveProps(node.props, ctx.data);
-    const src = node.props?.src;
-    const alt = node.props?.alt ?? "";
-    return <ImageEl src={src} alt={alt} /* ... */ />;
+    return <ImageEl {...props} />;
   },
   
   divider: ({ node, ctx }) => {

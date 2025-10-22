@@ -14,6 +14,10 @@ type Props = {
   className?: string;
   /** compact UI for wide preview columns */
   dense?: boolean;
+
+  /**  live page indicator */
+  currentPage?: number;
+  totalPages?: number;
 };
 
 export default function PreviewUtils({
@@ -24,11 +28,12 @@ export default function PreviewUtils({
   onDownload,
   className = "",
   dense = false,
+  currentPage,
+  totalPages,
 }: Props) {
   const dec = () => onZoomChange(Math.max(25, zoom - 25));
   const inc = () => onZoomChange(Math.min(300, zoom + 25));
 
-  // Keyboard shortcuts: Ctrl/Cmd + (+/-), and Ctrl/Cmd + P for download
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey;
@@ -128,6 +133,18 @@ export default function PreviewUtils({
           <FaSearchPlus className={dense ? "h-3 w-3" : "h-3.5 w-3.5"} />
         </button>
       </div>
+
+      {/* NEW: Page indicator */}
+      {totalPages && totalPages > 1 && (
+        <>
+          <span className="h-5 w-px bg-gray-200" aria-hidden />
+          <div className="flex items-center">
+            <span className={`font-medium text-gray-700 ${txt}`}>
+              Page {Math.min(currentPage ?? 1, totalPages)} / {totalPages}
+            </span>
+          </div>
+        </>
+      )}
 
       <span className="h-5 w-px bg-gray-200" aria-hidden />
 
