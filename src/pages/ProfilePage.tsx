@@ -148,29 +148,15 @@ const Profile: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: profile + notifications */}
           <div className="lg:col-span-2 space-y-6">
-            <Section
-              title="Basic information"
-              actions={
-                <button
-                  form="profile-form"
-                  type="submit"
-                  className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-60"
-                  disabled={savingProfile}
-                >
-                  {savingProfile ? "Saving…" : "Save changes"}
-                </button>
-              }
-            >
-              <form id="profile-form" onSubmit={saveProfile}>
-                <ProfileForm
-                  values={profile}
-                  onChange={handlePatch}
-                  onSubmit={saveProfile}
-                  saving={savingProfile}
-                />
-              </form>
+            <Section title="Basic information">
+              <ProfileForm
+                values={profile}
+                onChange={handlePatch}
+                onSubmit={saveProfile}
+                saving={savingProfile}
+              />
             </Section>
-
+              
             <Section title="Notifications">
               <div className="space-y-3">
                 <label className="flex items-start gap-3 text-sm text-gray-700">

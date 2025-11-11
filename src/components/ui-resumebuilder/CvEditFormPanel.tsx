@@ -80,10 +80,12 @@ export default function CvEditFormPanel({
     onUiChange?.({ selectedTemplate, renderMode, step: currentStep });
   }, [selectedTemplate, renderMode, currentStep, onUiChange]);
 
-  const values = watch();
-    React.useEffect(() => {
-    onChange?.(values as CvFormValues);
-    }, [values, onChange]);
+  React.useEffect(() => {
+    const sub = watch((data) => {
+      onChange?.(data as CvFormValues);
+    });
+    return () => sub.unsubscribe();
+  }, [watch, onChange]);
   // memoized steps nodes (we still pass RHF bits to your existing step components)
   const stepNode = useMemo(() => {
     switch (currentStep) {
@@ -140,7 +142,7 @@ export default function CvEditFormPanel({
 
   return (
     <div className={["w-full p-8 bg-white flex flex-col min-h-full", className || ""].join(" ")}>
-      <StepProgressBar steps={[...steps]} currentStep={currentStep} />
+      <StepProgressBar steps={steps} currentStep={currentStep} />
 
       {error && (
         <div className="mt-3 mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-red-700">
@@ -151,7 +153,7 @@ export default function CvEditFormPanel({
       {stepNode}
 
       {/* Navigation + Save */}
-      <div className="mt-6 flex items-center justify-between">
+      <div className="form-actions">
         <Button type="button" onClick={goBack} variant="secondary" size="lg">
           BACK
         </Button>

@@ -1,5 +1,7 @@
 /* Tailwind v4 import */
 @import "tailwindcss";
+@import "./styles/preview.css";
+@import "./styles/forms.css";
 
 /* Minimal base resets that play nice with Tailwind */
 @layer base {
@@ -9,3 +11,5 @@
     margin: 0;
   }
 }
+
+

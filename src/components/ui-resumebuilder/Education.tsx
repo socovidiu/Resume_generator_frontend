@@ -19,12 +19,12 @@ const Education: React.FC<EducationProps> = ({ register, errors, handleSubmit, o
     return (
         <form 
             onSubmit={handleSubmit(onSubmit)} 
-            className="flex flex-col bg-gray-100 text-black  p-6 rounded-lg shadow-md w-full"   
+            className="form-shell"   
         >
             <h2 className="text-2xl font-bold mb-4">Education</h2>
 
             {fields.map((field, index) => (
-                <div key={field.id} className="mb-4 border-b pb-4">
+                <div key={field.id} className="form-section">
                     <div>
                         <label className="block text-xs font-semibold">Degree</label>
                         <input

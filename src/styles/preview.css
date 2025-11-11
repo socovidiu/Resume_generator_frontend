@@ -1,0 +1,186 @@
+/* src/preview.css */
+
+/* -------------------------------
+   Components
+   ------------------------------- */
+@layer components {
+  /* A4/Letter sheet (size via CSS vars) */
+  .paper {
+    width: var(--paper-w, 210mm);
+    min-height: var(--paper-h, 297mm);
+    padding: var(--paper-pad, 12mm);
+    @apply bg-white mx-auto rounded-xl relative text-slate-900
+           shadow-[0_1px_1px_rgba(0,0,0,0.04),0_10px_30px_rgba(0,0,0,0.08)];
+  }
+
+  /* Page 1 layout: header spans; main + sidebar fill remaining height */
+  .paper-layout {
+    @apply grid gap-6 items-stretch;
+    grid-template-columns: 3fr 1fr; /* change ratio here */
+    grid-template-rows: auto 1fr; /* header auto, content fills */
+    grid-template-areas:
+      "header header"
+      "main   sidebar";
+    min-height: calc(var(--paper-h, 297mm) - (var(--paper-pad, 12mm) * 2));
+  }
+  .paper-layout > * {
+    min-width: 0;
+  } /* prevent overflow in grid children */
+
+  /* Columns */
+  .paper-col {
+    @apply flex flex-col;
+  }
+  .paper-col-left {
+    @apply p-4 h-full;
+  } /* h-full so it stretches with the row */
+  .paper-col-right {
+    @apply p-4 h-full;
+  }
+
+  /* Typography & section primitives */
+  .section-title {
+    @apply text-xl font-semibold tracking-wider text-stone-600 uppercase;
+  }
+  .h1 {
+    @apply text-2xl font-bold text-stone-600;
+  }
+  .h2 {
+    @apply text-xl font-semibold text-stone-600;
+  }
+  .body {
+    @apply text-sm leading-6 text-stone-600;
+  }
+  .small {
+    @apply text-xs leading-5 text-stone-600;
+  }
+  .header {
+    @apply col-span-full p-6 bg-gradient-to-r from-amber-300 to-orange-400 text-stone-600 flex items-center justify-between;
+  }
+  .atomic {
+    @apply space-y-1;
+  }
+  .chips {
+    @apply flex flex-wrap gap-2;
+  }
+
+  /* Experience timeline */
+  .item-block {
+    @apply relative pl-4 border-l-4 border-amber-200 border-solid;
+  }
+  .item-block::before {
+    content: "";
+    @apply absolute -left-2 top-1.5 w-3 h-3 rounded-full bg-amber-200 ring-2 ring-white;
+  }
+  .item-gap {
+    @apply space-y-6;
+  }
+  .item-divider {
+    @apply my-6 border-t border-slate-200;
+  }
+
+  /* Education: subtle timeline + optional 2-col grid */
+  .edu-block {
+    @apply relative pl-4 border-l-4 border-amber-300/70 border-solid;
+  }
+  .edu-block::before {
+    content: "";
+    @apply absolute -left-2 top-1.5 w-3 h-3 rounded-full bg-amber-300/80 ring-2 ring-white;
+  }
+  .edu-gap {
+    @apply space-y-5;
+  }
+  .edu-meta {
+    @apply text-xs text-slate-500;
+  }
+  .edu-badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs bg-amber-100 text-amber-800 border border-amber-200;
+  }
+  .muted-divider {
+    @apply my-6 border-t border-slate-200/70;
+  }
+  .edu-grid {
+    @apply grid gap-6;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 900px) {
+    .edu-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* Subtle divider */
+  .paper-divider {
+    @apply my-2 border-t-4 border-slate-200;
+  }
+}
+
+/* -------------------------------
+   Utilities
+   ------------------------------- */
+@layer utilities {
+  /* Hide non-current pages on screen; print shows all */
+  .ap-hidden-screen {
+    display: none;
+  }
+  @media print {
+    .ap-hidden-screen {
+      display: block !important;
+    }
+  }
+
+  /* Paged-media helpers */
+  .page-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .break-page {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Optional page separator (screen only) */
+  .page-gap {
+    @apply relative;
+  }
+  .page-gap::after {
+    content: "";
+    @apply absolute left-0 right-0 -bottom-3 h-px bg-slate-200;
+  }
+}
+
+/* -------------------------------
+   Print rules
+   ------------------------------- */
+@page {
+  size: 210mm 297mm;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .paper {
+    width: var(--paper-w, 210mm) !important;
+    height: var(--paper-h, 297mm) !important;
+    padding: var(--paper-pad, 12mm) !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .no-print,
+  header,
+  nav,
+  .app-shell,
+  .site-shell {
+    display: none !important;
+  }
+}

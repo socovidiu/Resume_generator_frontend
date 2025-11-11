@@ -1,35 +1,94 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
+// ---- Tunables ----
+const GAP = 24;                   // space between columns
+const MIN_FORM = 680;             // keep the form usable
+const MIN_PREVIEW = 420;          // smallest preview column we tolerate
+const MAX_PREVIEW = Infinity;         // cap on huge screens
+const STICKY_TOP = 0;            // should match your Navbar offset
+const PREVIEW_CARD_VPAD = 48;// preview's top+bottom padding (outer card)
+const MIN_SCALE_TO_KEEP_PREVIEW = 0.60; // if preview would be smaller, drop it
+
+// A4 mm → px @96dpi
+const mmToPx = (mm: number) => (mm * 96) / 25.4;
+const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
+const lerp = (a: number, b: number, t: number) => a + (b - a) * clamp01(t);
+const PAGE_PX = { w: mmToPx(210), h: mmToPx(297) }; // A4
+
+// Decides between one-column (form only) or two-column (form + preview)
+// In two-column, decides the preview width based on available space  and whether the preview
+// can be shown at a reasonable scale.  If not, falls back to one-column.
+// The form column always takes the remaining space, and is the only one that scrolls.    
 export default function CvEditLayout({
   form,
   preview,
 }: { form: React.ReactNode; preview: React.ReactNode }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [cw, setCw] = useState(0);
+  const [ch, setCh] = useState(0);
+
+  useEffect(() => {
+    if (!rootRef.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setCw(width);
+      setCh(height);
+    });
+    ro.observe(rootRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const { previewW, previewHidden } = useMemo(() => {
+    if (!cw || !ch) return { previewW: 0, previewHidden: true };
+
+     // If preview rendered, what width would we like (preview gets wider as viewport grows)
+    const w0 = 1200, w1 = 3000;                 // breakpoints
+    const t = clamp01((cw - w0) / (w1 - w0));
+    const previewFrac = lerp(0.60, 0.86, t);    // 60% → 86%
+    let w = Math.round(cw * previewFrac);
+
+    // keep form usable
+    w = Math.min(w, cw - GAP - MIN_FORM);
+    w = Math.max(MIN_PREVIEW, Math.min(MAX_PREVIEW, w));
+
+    // height/scale sanity: would the page be too small?
+    const availH = Math.max(0, ch - STICKY_TOP - PREVIEW_CARD_VPAD);
+    const availW = Math.max(0, w - 24); // minus inner padding
+    const scaleToFit = Math.min(availW / PAGE_PX.w, availH / PAGE_PX.h);
+
+    // not enough width for both or scale too tiny → hide preview (but keep it mounted)
+    const tooNarrow = cw < MIN_FORM + GAP + MIN_PREVIEW;
+    const tooSmallScale = scaleToFit < MIN_SCALE_TO_KEEP_PREVIEW;
+
+    return {
+      previewW: tooNarrow || tooSmallScale ? 0 : w,
+      previewHidden: tooNarrow || tooSmallScale,
+    };
+  }, [cw, ch]);
+
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4">
-      {/* lock the viewport area; adjust 4rem if your navbar is a different height */}
-      <div className="grid grid-cols-12 gap-6 h-[calc(100vh-4rem)] min-h-0 overflow-hidden">
-        {/* LEFT: wider and the only scroller */}
+    <div ref={rootRef} className="w-full h-[calc(100vh-4rem)] overflow-hidden px-4">
+      
+      <div className="flex h-full min-h-0" style={{ gap: GAP }}>
+        {/* LEFT: the only scroller */}
         <aside
-          className="
-            col-span-12 lg:col-span-8 xl:col-span-7 2xl:col-span-6
-            min-h-0 overflow-y-auto overscroll-contain
-            bg-white rounded-xl border border-gray-200 p-4
-          "
+          className="flex-1 min-w-0 overflow-y-auto overscroll-contain bg-white border border-gray-200 rounded-xl p-4"
           aria-label="CV form"
         >
-          {/* ensure children can scroll */}
-          <div className="min-h-0 pb-8">{form}</div>
+          {form}
+          <div className="h-6" />
         </aside>
 
-        {/* RIGHT: stays put; no scroll */}
-        <section className="col-span-12 lg:col-span-5 xl:col-span-6" aria-label="CV preview">
-          <div className="sticky top-20">
-            <div className="rounded-xl border border-gray-200 bg-white">
+        {/* RIGHT: sticky preview, no scroll, width decided above */}
+        <section className="shrink-0 h-full" style={{ width: previewW }} aria-label="CV preview">
+          <div className="sticky h-full" style={{ top: STICKY_TOP }}>
+            <div className="h-full bg-white border border-gray-200 rounded-xl overflow-hidden">
               {preview}
             </div>
           </div>
         </section>
       </div>
+      
     </div>
   );
 }

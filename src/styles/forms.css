@@ -1,0 +1,16 @@
+
+.form-shell {
+  @apply w-full bg-white text-gray-900 rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 space-y-6;
+}
+
+.form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6;
+}
+
+.form-section {
+  @apply rounded-xl border border-gray-200 bg-white shadow-sm p-4 md:p-5 space-y-4;
+}
+
+.form-actions {
+  @apply sticky bottom-0 mt-6 -mx-8 bg-gradient-to-t from-white to-white/60 backdrop-blur px-8 py-4 border-t flex items-center justify-between;
+}

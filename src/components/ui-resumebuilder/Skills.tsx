@@ -32,12 +32,12 @@ const Skills: React.FC<SkillsProps> = ({ register, errors, handleSubmit, onSubmi
     return (
         <form 
             onSubmit={handleSubmit(onSubmit)} 
-            className="flex flex-col bg-gray-100 text-black p-6 rounded-lg shadow-md w-full"
+            className="form-shell"
         >
             <h2 className="text-2xl font-bold mb-4">Skills</h2>
 
             {/* Input to add new skill */}
-            <div className="flex gap-2">
+            <div className="form-section">
                 <input
                     type="text"
                     value={newSkill}
