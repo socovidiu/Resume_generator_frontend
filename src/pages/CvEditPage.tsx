@@ -13,7 +13,7 @@ import { createCV, getCV, updateCV } from "../services/cv";
 import type { CVResponse } from "../services/types";
 
 // ---------- Steps ----------
-const steps = ["Contact Info", "Summary", "Work Experience", "Education", "Skills"] as const;
+const steps = ["Contact Info", "Summary", "Work Experience", "Education", "Skills", "Review"] as const;
 
 // ---------- Helpers ----------
 const LINK_TYPES = ["LinkedIn", "GitHub", "Website"] as const;

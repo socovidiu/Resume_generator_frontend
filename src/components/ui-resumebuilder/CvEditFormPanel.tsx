@@ -8,6 +8,7 @@ import Summary from "./Summary";
 import WorkExperience from "./WorkExperience";
 import Education from "./Education";
 import Skills from "./Skills";
+import Review from "./Review";
 import Button from "../ui-elements/Button";
 
 // -------------------------------------------------------------------
@@ -33,7 +34,7 @@ type Props = {
 
 export default function CvEditFormPanel({
   defaultValues,
-  steps = ["Contact Info", "Summary", "Work Experience", "Education", "Skills"],
+  steps = ["Contact Info", "Summary", "Work Experience", "Education", "Skills", "Review"],
   initialStep = 0,
   saving = false,
   isNew = false,
@@ -127,6 +128,17 @@ export default function CvEditFormPanel({
       case 4:
         return (
           <Skills
+            register={register}
+            errors={errors}
+            handleSubmit={handleSubmit}
+            onSubmit={submit}
+            watch={watch}
+            setValue={setValue}
+          />
+        );
+      case 5:
+        return (
+          <Review
             register={register}
             errors={errors}
             handleSubmit={handleSubmit}

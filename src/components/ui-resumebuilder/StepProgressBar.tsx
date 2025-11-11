@@ -4,7 +4,8 @@ import {
     ClipboardDocumentListIcon, 
     BriefcaseIcon, 
     AcademicCapIcon, 
-    StarIcon 
+    StarIcon,
+    CheckCircleIcon 
 } from "@heroicons/react/24/outline";
 
 interface StepProgressBarProps {
@@ -17,7 +18,8 @@ const stepIcons = [
     <ClipboardDocumentListIcon className="w-5 h-5" />,
     <BriefcaseIcon className="w-5 h-5" />,
     <AcademicCapIcon className="w-5 h-5" />,
-    <StarIcon className="w-5 h-5" />
+    <StarIcon className="w-5 h-5" />,
+    <CheckCircleIcon className="w-5 h-5" />
 ];
 
 const StepProgressBar: React.FC<StepProgressBarProps> = ({ steps, currentStep }) => {
@@ -50,7 +52,7 @@ const StepProgressBar: React.FC<StepProgressBarProps> = ({ steps, currentStep })
                         </div>
 
                         {/* Connector Line */}
-                        {index < steps.length  && (
+                        {index < steps.length && (
                             <div className={`w-full h-1 ${isActive ? "bg-orange-500" : "bg-gray-300"}`}></div>
                         )}
                     </div>
