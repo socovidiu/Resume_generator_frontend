@@ -1,6 +1,6 @@
 /* Tailwind v4 import */
 @import "tailwindcss";
-
+@import "./styles/preview.css";
 @import "./styles/forms.css";
 
 /* Minimal base resets that play nice with Tailwind */
@@ -12,65 +12,4 @@
   }
 }
 
-/* ---- A4 paper + print rules ---- */
-.paper {
-  width: 210mm;
-  min-height: 297mm;
-  background: #fff;
-  margin: 0 auto;
-  padding: 12mm;
-  box-shadow: 0 2px 18px rgba(0,0,0,.08);
-  border-radius: 8px;
-  position: relative;
-  color: #111827;
-}
 
-/* Ensure columns fill page height on screen */
-.paper-grid { display: flex;  height: calc(297mm - 24mm); }
-.paper-col { display: flex; flex-direction: column; gap: 6mm; min-height: 0; }
-.paper-scroll { overflow: auto; }
-/* Sidebar visuals */
-.paper-col-left {
-  flex-basis: 50mm;                 /* fixed left column width */
-  flex-grow: 0;
-  flex-shrink: 0;
-  border-right: 1px solid #e5e7eb;  /* subtle divider */
-  padding: 8mm 6mm;
-  border-radius: 6px;
-}
-
-/* Main column */
-.paper-col-right {
-  flex-grow: 1;
-  padding: 8mm 10mm;
-}
-
-/* Print: exact A4 with no shrink and no browser margins */
-@page { size: 210mm 297mm; margin: 0; }
-
-@media print {
-  html, body {
-    width: 210mm;
-    height: 297mm;
-    margin: 0 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Print exactly one page and remove effects */
-  .paper {
-    width: 210mm !important;
-    height: 297mm !important;   /* use fixed height on print */
-    margin: 0 !important;
-    padding: 12mm !important;   /* inner margins you control */
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    overflow: hidden !important;
-  }
-
-  /* Fill the remaining vertical space inside the page */
-  .paper-grid { height: calc(297mm - 24mm); } /* 24mm = 12mm top + 12mm bottom padding */
-
-  /* Hide app chrome in print */
-  .no-print, header, nav, .app-shell, .site-shell { display: none !important; }
-}

@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { FaDownload, FaSearchMinus, FaSearchPlus } from "react-icons/fa";
 
 export type PaperSize = "A4" | "Letter";
-
 const ZOOM_PRESETS = [50, 75, 100, 125, 150, 175, 200];
 
 type Props = {
@@ -12,12 +11,12 @@ type Props = {
   onZoomChange: (zoom: number) => void;
   onDownload: () => void;
   className?: string;
-  /** compact UI for wide preview columns */
   dense?: boolean;
 
-  /**  live page indicator */
-  currentPage?: number;
+  /** live page indicator + controller */
+  currentPage?: number | "all";
   totalPages?: number;
+  onCurrentPageChange?: (page: number | "all") => void;
 };
 
 export default function PreviewUtils({
@@ -28,32 +27,71 @@ export default function PreviewUtils({
   onDownload,
   className = "",
   dense = false,
-  currentPage,
-  totalPages,
+  currentPage = "all",
+  totalPages = 1,
+  onCurrentPageChange,
 }: Props) {
   const dec = () => onZoomChange(Math.max(25, zoom - 25));
   const inc = () => onZoomChange(Math.min(300, zoom + 25));
 
+  // --- Page nav helpers ---
+  const goPrev = () => {
+    if (!onCurrentPageChange) return;
+    if (currentPage === "all") {
+      onCurrentPageChange(0);
+    } else {
+      onCurrentPageChange(Math.max(0, currentPage - 1));
+    }
+  };
+
+  const goNext = () => {
+    if (!onCurrentPageChange) return;
+    if (currentPage === "all") {
+      onCurrentPageChange(0);
+    } else {
+      onCurrentPageChange(Math.min(totalPages - 1, currentPage + 1));
+    }
+  };
+
+  const showAll = () => onCurrentPageChange?.("all");
+
+  const jumpTo = (pageIndex: number) => {
+    if (!onCurrentPageChange) return;
+    const clamped = Math.max(0, Math.min(totalPages - 1, pageIndex));
+    onCurrentPageChange(clamped);
+  };
+
+  // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey;
-      if (!mod) return;
 
-      if (e.key === "-" || e.key === "_") {
-        e.preventDefault();
-        dec();
-      } else if (e.key === "+" || e.key === "=") {
-        e.preventDefault();
-        inc();
-      } else if (e.key.toLowerCase() === "p") {
-        e.preventDefault();
-        onDownload();
+      // Zoom & print with modifiers
+      if (mod) {
+        if (e.key === "-" || e.key === "_") {
+          e.preventDefault(); dec(); return;
+        }
+        if (e.key === "+" || e.key === "=") {
+          e.preventDefault(); inc(); return;
+        }
+        if (e.key.toLowerCase() === "p") {
+          e.preventDefault(); onDownload(); return;
+        }
+        return;
+      }
+
+      // Page navigation without modifiers
+      if (e.key === "ArrowLeft") {
+        e.preventDefault(); goPrev(); return;
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault(); goNext(); return;
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoom]);
+  }, [zoom, currentPage, totalPages]);
 
   // density helpers
   const ctlH = dense ? "h-7" : "h-8";
@@ -62,6 +100,13 @@ export default function PreviewUtils({
   const gap = dense ? "gap-2" : "gap-3";
   const barPad = dense ? "px-2 py-1.5" : "px-3 py-2";
   const top = dense ? "top-2" : "top-4";
+
+  const canPrev =
+    currentPage !== "all" && typeof currentPage === "number" && currentPage > 0;
+  const canNext =
+    currentPage !== "all" &&
+    typeof currentPage === "number" &&
+    currentPage < totalPages - 1;
 
   return (
     <div
@@ -134,17 +179,61 @@ export default function PreviewUtils({
         </button>
       </div>
 
-      {/* NEW: Page indicator */}
-      {totalPages && totalPages > 1 && (
-        <>
-          <span className="h-5 w-px bg-gray-200" aria-hidden />
-          <div className="flex items-center">
-            <span className={`font-medium text-gray-700 ${txt}`}>
-              Page {Math.min(currentPage ?? 1, totalPages)} / {totalPages}
-            </span>
-          </div>
-        </>
-      )}
+      <span className="h-5 w-px bg-gray-200" aria-hidden />
+
+      {/* Page navigation */}
+      <div className="flex items-center gap-2">
+        <button
+          className="px-2 py-1 rounded bg-slate-200 disabled:opacity-50"
+          onClick={goPrev}
+          disabled={!canPrev}
+          title="Previous page (←)"
+          aria-label="Previous page"
+        >
+          ←
+        </button>
+
+        {/* Quick jump select (optional; hide if only one page) */}
+        {totalPages > 1 && currentPage !== "all" && (
+          <select
+            className={`${ctlH} rounded-lg border border-gray-300 bg-white ${txt} ${padX}`}
+            value={typeof currentPage === "number" ? currentPage : 0}
+            onChange={(e) => jumpTo(Number(e.target.value))}
+            aria-label="Jump to page"
+          >
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <option key={i} value={i}>
+                Page {i + 1}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <span className="text-sm tabular-nums">
+          {currentPage === "all"
+            ? `All pages (${totalPages})`
+            : `Page ${(currentPage as number) + 1} / ${totalPages}`}
+        </span>
+
+        <button
+          className="px-2 py-1 rounded bg-slate-200 disabled:opacity-50"
+          onClick={goNext}
+          disabled={!canNext}
+          title="Next page (→)"
+          aria-label="Next page"
+        >
+          →
+        </button>
+
+        <button
+          className="ml-2 px-2 py-1 rounded bg-slate-200 disabled:opacity-50"
+          onClick={showAll}
+          disabled={currentPage === "all"}
+          title="Show all pages"
+        >
+          Show all
+        </button>
+      </div>
 
       <span className="h-5 w-px bg-gray-200" aria-hidden />
 

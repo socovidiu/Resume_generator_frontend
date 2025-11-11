@@ -1,51 +1,40 @@
-
-
 export const tokens = {
-  // Palette: Indigo/Violet accents, Slate neutrals
   page: "paper",
+  divider: "paper-divider",
+  main: "paper-col paper-col-right",
+  sidebar: "paper-col paper-col-left bg-stone-400 rounded-lg", // bg on the grid item wrapper
+  sectionTitle: "section-title",
+  h1: "h1",
+  h2: "h2",
+  body: "body",
+  small: "small",
+
+  // repeated items / timeline
+  accentBorder: "item-block",
+  atomic: "atomic",
 
   // Header: gradient bar, light-on-dark text
-  header: "bg-gradient-to-r from-indigo-600 to-violet-600 p-8 flex items-center justify-between",
-  h1: "text-4xl font-bold text-white tracking-tight",
-  h2: "text-lg font-semibold text-slate-900",
+  header: "header",
+  link: "text-sm text-stone-500 underline",
 
-  // Section titles (light surface) + on-dark variant (sidebar)
-  sectionTitle: "uppercase text-xs tracking-widest text-slate-500 mb-2",
-  sectionTitleOnDark: "uppercase text-xs tracking-widest text-slate-200 mb-2",
-
-  // Body text (light surface)
-  body: "text-sm text-slate-700 leading-relaxed",
-
-  // Links (light surface) + on-dark variant (sidebar)
-  link: "text-indigo-600 underline",
-  linkOnDark: "text-indigo-500 underline",
-
-  // Skill chip (used in dark sidebar — keeps good contrast)
-  chipContainer: "flex flex-wrap gap-1 items-start",
+  // Skills
+  chipContainer: "chips",
   chip:
-    "inline-flex self-start items-center whitespace-nowrap rounded-full px-3 py-1 text-xs " +
-    "bg-indigo-100 text-indigo-800 border border-indigo-200",
+    "inline-flex self-start items-center whitespace-nowrap rounded-full px-3 py-1 text-sm " +
+    "bg-stone-100 text-amber-800 border border-indigo-200",
 
   // Avatar
   avatar: "w-32 h-32 rounded-full object-cover border-4 border-white shadow-md",
 
-  // Dividers for light & dark surfaces
-  divider: "my-4 border-slate-200",
-  dividerOnDark: "my-4 border-slate-600/50",
+  sectiondivider: "my-4 border-slate-300",
+  sectionBlock: "page-avoid", // keep section header with its first item if possible
 
-  // Columns
-  sidebar: "paper-col paper-col-left paper-scroll bg-stone-800 text-stone-100 rounded-lg",
-  main: "paper-col paper-col-right paper-scroll",
-
-  // Accents
-  accentBorder: "border-l-4 border-indigo-500",
-
-  // Pagination helpers
-  atomic: "page-avoid",          // keep a single card together
-  sectionBlock: "page-avoid",    // keep a whole section header + first item together
-
-  gapSection: 24,
-  gapItem: 8,
+  // Education
+  eduBlock: "edu-block",
+  eduGap: "edu-gap",
+  eduMeta: "edu-meta",
+  eduBadge: "edu-badge",
+  mutedDivider: "muted-divider",
 };
 
 // Header
@@ -65,39 +54,72 @@ const HeaderSection = () => ({
             children: "{{firstName}} {{lastName}}",
           },
         },
-        { type: "text", props: { className: "text-indigo-100 text-base font-medium", children: "{{jobTitle}}" } },
-        { type: "text", props: { className: "text-sm text-indigo-50/90", children: "{{email}} • {{phone}}" } },
-        { type: "text", props: { className: "text-sm text-indigo-50/90", children: "{{city}}, {{country}}" } },
+        {
+          type: "text",
+          props: { className: "{{tokens.h2}}", children: "{{jobTitle}}" },
+        },
+        {
+          type: "text",
+          props: {
+            className: "{{tokens.small}}",
+            children: "{{email}} • {{phone}}",
+          },
+        },
+        {
+          type: "text",
+          props: {
+            className: "{{tokens.small}}",
+            children: "{{city}}, {{country}}",
+          },
+        },
       ],
     },
-    { type: "image", props: { src: { bind: "photo" }, className: "{{tokens.avatar}}" } },
+    {
+      type: "image",
+      props: { src: { bind: "photo" }, className: "{{tokens.avatar}}" },
+    },
   ],
 });
 
-// Sidebar
+// Sidebar (skills + links)
 const Sidebar = () => ({
   type: "stack",
   props: { className: "{{tokens.sidebar}}", gap: 16 },
   children: [
     {
       type: "stack",
-      props: { className: "{{tokens.atomic}}" }, // keep the Skills block together
+      props: { className: "{{tokens.atomic}}" },
       children: [
-        { type: "text", props: { className: "{{tokens.sectionTitleOnDark}}", children: "Skills" } },
         {
-          type: "stack",
-          props: { className: "{{tokens.chipContainer}}" },
+          type: "text",
+          props: { className: "{{tokens.sectionTitle}}", children: "Skills" },
+        },
+        {
+          type: "row",
+          props: { className: "{{tokens.chipContainer}}", gap: 8 },
           repeat: "skills",
-          children: [{ type: "text", props: { className: tokens.chip, children: "{{.}}" } }],
+          children: [
+            {
+              type: "text",
+              props: {
+                as: "span",
+                className: "{{tokens.chip}}",
+                children: "{{.}}",
+              },
+            },
+          ],
         },
       ],
     },
-    { type: "divider", props: { className: "{{tokens.dividerOnDark}}" } },
+    { type: "divider", props: { className: "{{tokens.divider}}" } },
     {
       type: "stack",
-      props: { className: "{{tokens.atomic}}" }, // keep the Links block together
+      props: { className: "{{tokens.atomic}}" },
       children: [
-        { type: "text", props: { className: "{{tokens.sectionTitleOnDark}}", children: "Links" } },
+        {
+          type: "text",
+          props: { className: "{{tokens.sectionTitle}}", children: "Links" },
+        },
         {
           type: "stack",
           repeat: "links",
@@ -107,7 +129,7 @@ const Sidebar = () => ({
               props: {
                 as: "a",
                 href: { bind: "url" },
-                className: "{{tokens.linkOnDark}} text-sm break-all",
+                className: "{{tokens.link}} text-sm break-all",
                 children: "{{type}}",
               },
             },
@@ -118,68 +140,48 @@ const Sidebar = () => ({
   ],
 });
 
-// Main content
-// Main content
-const MainContent = () => ({
-  type: "stack",
-  props: { className: "{{tokens.main}}", gap: 24 },
+// Experience section (detailed timeline)
+const ExperienceEntry = () => ({
+  type: "pageblock",
+  props: { className: "{{tokens.sectionBlock}}", gap: 8 },
   children: [
-    // ABOUT ME (allowed to break)
     {
-      type: "stack",
-      children: [
-        { type: "text", props: { className: "{{tokens.sectionTitle}}", children: "About Me" } },
-        { type: "text", props: { className: "{{tokens.body}}", children: "{{summary}}" } },
-      ],
+      type: "text",
+      props: { className: "{{tokens.sectionTitle}}", children: "Experience" },
     },
-
-    { type: "divider", props: { className: "{{tokens.divider}}" } },
-
-    // EXPERIENCE (whole section kept together enough to avoid orphan header)
     {
       type: "stack",
-      props: { className: "{{tokens.sectionBlock}}", gap: 12 }, // <-- new
+      props: { className: "item-gap" },
+      repeat: "workExperiences",
       children: [
-        { type: "text", props: { className: "{{tokens.sectionTitle}}", children: "Experience" } },
         {
           type: "stack",
-          repeat: "workExperiences",
+          props: { className: "{{tokens.accentBorder}} {{tokens.atomic}}" },
           children: [
             {
-              type: "stack",
-              props: { className: "{{tokens.accentBorder}} pl-4 {{tokens.atomic}}" }, // item stays intact
-              children: [
-                { type: "text", props: { className: "{{tokens.h2}}", children: "{{position}}" } },
-                { type: "text", props: { className: "font-medium text-slate-800", children: "{{company}}" } },
-                { type: "text", props: { className: "text-xs text-slate-500", children: "{{startDate}} — {{endDate}}" } },
-                { type: "text", props: { className: "{{tokens.body}} mt-2 whitespace-pre-wrap", children: "{{description}}" } },
-              ],
+              type: "text",
+              props: { className: "{{tokens.h2}}", children: "{{position}}" },
             },
-          ],
-        },
-      ],
-    },
-
-    { type: "divider", props: { className: "{{tokens.divider}}" } },
-
-    // EDUCATION (same treatment as Experience)
-    {
-      type: "stack",
-      props: { className: "{{tokens.sectionBlock}}", gap: 12 }, // <-- new
-      children: [
-        { type: "text", props: { className: "{{tokens.sectionTitle}}", children: "Education" } },
-        {
-          type: "stack",
-          repeat: "educations",
-          children: [
             {
-              type: "stack",
-              props: { className: "{{tokens.atomic}}" }, // item stays intact
-              children: [
-                { type: "text", props: { className: "{{tokens.h2}}", children: "{{degree}}" } },
-                { type: "text", props: { className: "font-medium text-slate-800", children: "{{school}}" } },
-                { type: "text", props: { className: "text-xs text-slate-500", children: "{{startDate}} — {{endDate}}" } },
-              ],
+              type: "text",
+              props: {
+                className: "font-medium text-slate-800",
+                children: "{{company}}",
+              },
+            },
+            {
+              type: "text",
+              props: {
+                className: "text-xs text-slate-500",
+                children: "{{startDate}} — {{endDate}}",
+              },
+            },
+            {
+              type: "text",
+              props: {
+                className: "{{tokens.body}} mt-2 whitespace-pre-wrap",
+                children: "{{description}}",
+              },
             },
           ],
         },
@@ -188,18 +190,169 @@ const MainContent = () => ({
   ],
 });
 
-// Root layout (A4 + two columns with gutter)
+// Education section (lighter timeline)
+const EducationEntry = () => ({
+  type: "pageblock",
+  props: { className: "{{tokens.sectionBlock}}", gap: 12 },
+  children: [
+    {
+      type: "text",
+      props: { className: "{{tokens.sectionTitle}}", children: "Education" },
+    },
+    {
+      type: "stack",
+      props: { className: "edu-grid" },
+      repeat: "educations",
+      children: [
+        {
+          type: "stack",
+          props: { className: "{{tokens.eduBlock}} {{tokens.atomic}}" },
+          children: [
+            {
+              type: "text",
+              props: { className: "{{tokens.h2}}", children: "{{degree}}" },
+            },
+            {
+              type: "text",
+              props: {
+                className: "font-medium text-slate-800",
+                children: "{{school}}",
+              },
+            },
+            {
+              type: "text",
+              props: {
+                className: "{{tokens.eduMeta}}",
+                children:
+                  "{{startDate}} — {{endDate}}{{city ? ' • ' + city : ''}}",
+              },
+            },
+            {
+              type: "row",
+              props: { gap: 8 },
+              children: [
+                {
+                  type: "text",
+                  props: {
+                    as: "span",
+                    className: "{{tokens.eduBadge}}",
+                    children: "{{gpa ? 'GPA ' + gpa : ''}}",
+                  },
+                },
+                {
+                  type: "text",
+                  props: {
+                    as: "span",
+                    className: "{{tokens.eduBadge}}",
+                    children: "{{honors}}",
+                  },
+                },
+              ],
+            },
+            {
+              type: "row",
+              props: { gap: 6 },
+              repeat: "coursework",
+              children: [
+                {
+                  type: "text",
+                  props: {
+                    as: "span",
+                    className:
+                      "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] bg-stone-100 text-slate-700 border border-stone-200",
+                    children: "{{.}}",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    { type: "divider", props: { className: "{{tokens.mutedDivider}}" } },
+  ],
+});
+
+// Main content (about + experience + education)
+const MainContent = () => ({
+  type: "stack",
+  props: { className: "{{tokens.main}}", gap: 24 },
+  children: [
+    // About
+    {
+      type: "stack",
+      children: [
+        {
+          type: "text",
+          props: { className: "{{tokens.sectionTitle}}", children: "About Me" },
+        },
+        {
+          type: "text",
+          props: { className: "{{tokens.body}}", children: "{{summary}}" },
+        },
+      ],
+    },
+
+    { type: "divider", props: { className: "{{tokens.divider}}" } },
+
+    // Experience
+    ExperienceEntry(),
+    
+    { type: "divider", props: { className: "{{tokens.divider}}" } },
+
+    // Education
+    EducationEntry(),
+  ],
+});
+
+// Root (A4 + two columns with grid)
 export const cvLayoutPro = {
   root: {
     type: "stack",
     props: { className: "{{tokens.page}}" },
     children: [
-      HeaderSection(),
-      { type: "divider", props: { className: "{{tokens.divider}}" } },
       {
-        type: "box",
-        props: { className: "paper-grid" }, // fixed-height row with gap
-        children: [Sidebar(), MainContent()],
+        type: "pageblock",
+        children: [
+          {
+            type: "box",
+            props: { className: "paper-layout", noPageBlock: true },
+            children: [
+              // 1) Header
+              {
+                type: "box",
+                props: { style: { gridArea: "header" }, noPageBlock: true },
+                children: [
+                  HeaderSection(),
+                  {
+                    type: "divider",
+                    props: { className: "{{tokens.divider}}" },
+                  },
+                ],
+              },
+              // 2) Main
+              {
+                type: "box",
+                props: {
+                  className: "paper-col paper-col-right {{tokens.main}}",
+                  style: { gridArea: "main" },
+                  noPageBlock: true,
+                },
+                children: [MainContent()],
+              },
+              // 3) Sidebar
+              {
+                type: "box",
+                props: {
+                  className: "paper-col paper-col-left {{tokens.sidebar}}",
+                  style: { gridArea: "sidebar" },
+                  noPageBlock: true,
+                },
+                children: [Sidebar()],
+              },
+            ],
+          },
+        ],
       },
     ],
   },

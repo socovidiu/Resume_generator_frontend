@@ -1,18 +1,19 @@
+// IframePagedPreview.tsx
 import React, {
+  forwardRef,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
-  useImperativeHandle,
-  forwardRef,
 } from "react";
 import { createRoot, Root } from "react-dom/client";
 import type { PaperSize } from "./PreviewUtils";
 
-type IframePagedPreviewProps = {
-  children: React.ReactNode;     // your ReactSchemaView tree
-  size?: PaperSize;              // "A4" | "Letter"
-  zoom?: number;                 // 100 = 1x
+type Props = {
+  children: React.ReactNode;
+  size?: PaperSize;
+  zoom?: number; // 100 = 1x
   onPageCount?: (n: number) => void;
   onCurrentPage?: (n: number) => void;
 };
@@ -21,163 +22,260 @@ export type IframePagedPreviewHandle = { print: () => void };
 
 const PAGE_GAP_PX = 16;
 
-function collectStylesheetLinks(): string[] {
-  const urls: string[] = [];
-  document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]').forEach((lnk) => {
-    if (lnk.href) urls.push(lnk.href);
-  });
-  return urls;
+function raf(): Promise<void> {
+  return new Promise((r) => requestAnimationFrame(() => r()));
 }
 
-async function loadStylesInto(doc: Document, hrefs: string[]) {
-  await Promise.all(
-    hrefs.map(
-      href =>
-        new Promise<void>((resolve) => {
-          const l = doc.createElement("link");
-          l.rel = "stylesheet";
-          l.href = href;
-          l.onload = () => resolve();
-          l.onerror = () => resolve(); // don’t block if a sheet fails
-          doc.head.appendChild(l);
-        })
-    )
-  );
-}
-
-async function loadScriptInto(doc: Document, src: string): Promise<void> {
-  await new Promise<void>((resolve) => {
-    const s = doc.createElement("script");
-    s.src = src;
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => resolve(); // best effort
-    doc.body.appendChild(s);
-  });
-}
-
-const IframePagedPreview = forwardRef<IframePagedPreviewHandle, IframePagedPreviewProps>(
+const IframePagedPreview = forwardRef<IframePagedPreviewHandle, Props>(
   ({ children, size = "A4", zoom = 100, onPageCount, onCurrentPage }, ref) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const scrollHostRef = useRef<HTMLDivElement>(null);
     const reactRootRef = useRef<Root | null>(null);
+
+    const [docReady, setDocReady] = useState<Document | null>(null);
     const [pageCount, setPageCount] = useState(1);
 
+    // pagination job control
+    const runCounterRef = useRef(0);     // increments for each preview run
+    const runningRef = useRef<number>(0); // current active run id (0 = none)
+
     useImperativeHandle(ref, () => ({
-      print: () => {
-        const w = iframeRef.current?.contentWindow;
-        if (!w) return;
-        w.focus();
-        w.print();
-      },
+      print: () => iframeRef.current?.contentWindow?.print(),
     }));
 
-    const scale = useMemo(() => Math.max(0.25, Math.min(3, zoom / 100)), [zoom]);
+    const scale = useMemo(
+      () => Math.max(0.25, Math.min(3, zoom / 100)),
+      [zoom]
+    );
 
+    const srcDoc = useMemo(
+      () => `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @page { size: ${size === "A4" ? "210mm 297mm" : "8.5in 11in"}; margin: 0; }
+      html, body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page-avoid { break-inside: avoid; page-break-inside: avoid; }
+      body { background: white; }
+    </style>
+  </head>
+  <body>
+    <div id="resume-root" style="width:${size === "A4" ? "210mm" : "8.5in"}"></div>
+  </body>
+</html>`,
+      [size]
+    );
+
+    // Wait for iframe to load
     useEffect(() => {
       const iframe = iframeRef.current;
       if (!iframe) return;
-      let disposed = false;
+      const onLoad = () => setDocReady(iframe.contentDocument);
+      iframe.addEventListener("load", onLoad);
+      return () => iframe.removeEventListener("load", onLoad);
+    }, []);
 
-      (async () => {
-        // Build fresh iframe document
-        const doc = iframe.contentDocument!;
-        doc.open();
-        doc.write(`<!doctype html><html><head><meta charset="utf-8"></head><body></body></html>`);
-        doc.close();
+    // Helper: clone <link rel="stylesheet"> into iframe (once)
+    const injectCssOnce = async (doc: Document) => {
+      if (doc.getElementById("__injected_css__")) return;
+      const marker = doc.createElement("meta");
+      marker.id = "__injected_css__";
+      doc.head.appendChild(marker);
 
-        // Inject styles (Tailwind/app CSS)
-        const hrefs = collectStylesheetLinks();
-        await loadStylesInto(doc, hrefs);
-        if (disposed) return;
+      const links = Array.from(
+        document.querySelectorAll('link[rel="stylesheet"]')
+      ) as HTMLLinkElement[];
 
-        // Add our print/preview helpers
-        const css = doc.createElement("style");
-        css.textContent = `
-          @page { size: ${size === "A4" ? "210mm 297mm" : "8.5in 11in"}; margin: 0; }
-          html, body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .page-avoid { break-inside: avoid; page-break-inside: avoid; }
-          .paper-scroll { overflow: visible !important; }
-          .pagedjs_page { box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 10px 20px rgba(0,0,0,.08); }
-          .pagedjs_page { margin-bottom: ${PAGE_GAP_PX}px; }
-          .pagedjs_page:last-child { margin-bottom: 0; }
-          @media print {
-            .pagedjs_page { box-shadow: none !important; margin: 0 !important; page-break-after: always !important; }
-            .pagedjs_page:last-child { page-break-after: auto !important; }
-          }
-        `;
-        doc.head.appendChild(css);
+      await Promise.all(
+        links.map(
+          (lnk) =>
+            new Promise<void>((resolve) => {
+              const cloned = doc.createElement("link");
+              cloned.rel = "stylesheet";
+              cloned.href = lnk.href;
+              cloned.onload = () => resolve();
+              cloned.onerror = () => resolve();
+              doc.head.appendChild(cloned);
+            })
+        )
+      );
+    };
 
-        // Mount point (width must match paper width)
-        const mount = doc.createElement("div");
-        mount.id = "resume-root";
-        mount.style.width = size === "A4" ? "210mm" : "8.5in";
-        mount.style.background = "white";
-        doc.body.appendChild(mount);
+    // Helper: ensure paged containers
+    const ensureContainers = (doc: Document) => {
+      let viewport = doc.getElementById("paged-viewport") as HTMLElement | null;
+      if (!viewport) {
+        viewport = doc.createElement("div");
+        viewport.id = "paged-viewport";
+        viewport.style.transformOrigin = "top left";
+        doc.body.appendChild(viewport);
+      }
+      let target = doc.getElementById("paged-output") as HTMLElement | null;
+      if (!target) {
+        target = doc.createElement("div");
+        target.id = "paged-output";
+        viewport.appendChild(target);
+      } else {
+        target.innerHTML = "";
+      }
+      return { viewport, target };
+    };
 
-        // Render React INTO the iframe
-        reactRootRef.current?.unmount();
-        const root = createRoot(mount);
-        reactRootRef.current = root;
-        root.render(<>{children}</>);
+    // Helper: run paged.js safely, canceling previous runs
+    const runPagination = async () => {
+      const iframe = iframeRef.current;
+      const doc = iframe?.contentDocument;
+      if (!iframe || !doc || !reactRootRef.current) return;
 
-        // Give React a frame to commit layout before paginating
-        await new Promise(r => requestAnimationFrame(() => r(null as unknown as void)));
-        if (disposed) return;
+      // bump run id and mark as running
+      const runId = ++runCounterRef.current;
+      runningRef.current = runId;
 
-        // Load Paged.js in the iframe
-        await loadScriptInto(doc, "https://unpkg.com/pagedjs/dist/paged.polyfill.js");
-        if (disposed) return;
-
-        // Access the Paged namespace from the iframe window
+      // load Paged.js if needed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let PagedNS: any = (iframe.contentWindow as any)?.Paged;
+      if (!PagedNS) {
+        await new Promise<void>((resolve) => {
+          const s = doc.createElement("script");
+          s.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
+          s.async = true;
+          s.onload = () => resolve();
+          s.onerror = () => resolve();
+          doc.body.appendChild(s);
+        });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const PagedNS = (iframe.contentWindow as any)?.Paged || (window as any)?.Paged;
-        if (!PagedNS) return;
+        PagedNS = (iframe.contentWindow as any)?.Paged;
+      }
+      if (runningRef.current !== runId || !PagedNS) return;
 
-        // ✅ Correct API: Previewer().preview(content, styles[], onRender)
+      const { target } = ensureContainers(doc);
+      const sourceEl = doc.getElementById("resume-root");
+      if (!sourceEl || !target) return;
+
+      // Wait two frames so React commits layout (prevents null rects in paged)
+      await raf();
+      await raf();
+      if (runningRef.current !== runId) return;
+
+      try {
         const previewer = new PagedNS.Previewer();
-
-        const onRendered = () => {
-          if (disposed) return;
+        previewer.on("rendered", () => {
+          if (runningRef.current !== runId) return;
           const pages = doc.querySelectorAll(".pagedjs_page");
           const count = pages.length || 1;
           setPageCount(count);
           onPageCount?.(count);
+
+          // cosmetics
+          pages.forEach((p: Element, i: number) => {
+            const el = p as HTMLElement;
+            el.style.marginBottom =
+              i === pages.length - 1 ? "0px" : `${PAGE_GAP_PX}px`;
+            el.style.boxShadow =
+              "0 0 0 1px rgba(0,0,0,.08), 0 10px 20px rgba(0,0,0,.08)";
+          });
+
+          // hide flow
+          (sourceEl as HTMLElement).style.position = "absolute";
+          (sourceEl as HTMLElement).style.left = "-99999px";
+
+          // reset scroll/page
           if (scrollHostRef.current) scrollHostRef.current.scrollTop = 0;
           onCurrentPage?.(1);
-        };
+        });
 
-        // content can be the iframe's Document for “whole doc” pagination
-        previewer.preview(doc, [], onRendered);
+        // IMPORTANT: this returns a promise; await avoids overlapping runs
+        await previewer.preview(sourceEl, [], target);
+      } catch {
+        // swallow—paged sometimes throws internally; job control prevents loops
+      } finally {
+        // clear running flag if this is still the latest run
+        if (runningRef.current === runId) {
+          runningRef.current = 0;
+        }
+      }
+    };
+
+    // Initial mount & size changes
+    useEffect(() => {
+      const iframe = iframeRef.current;
+      const doc = docReady;
+      if (!iframe || !doc) return;
+
+      let disposed = false;
+
+      (async () => {
+        await injectCssOnce(doc);
+
+        const mount = doc.getElementById("resume-root");
+        if (!mount) return;
+
+        if (!reactRootRef.current) {
+          reactRootRef.current = createRoot(mount);
+        }
+        reactRootRef.current.render(<>{children}</>);
+
+        await raf(); // settle
+        if (disposed) return;
+
+        ensureContainers(doc);
+        await runPagination();
       })();
 
       return () => {
         disposed = true;
-        // Defer unmount to avoid “synchronously unmount” warnings during render
+        // cancel any pending run
+        runningRef.current = 0;
+        // tear down root (deferred)
         setTimeout(() => {
           try {
             reactRootRef.current?.unmount();
-            if (iframeRef.current) iframeRef.current.src = "about:blank";
-          } catch {
-            /* noop */
-          }
+          } catch {}
+          reactRootRef.current = null;
         }, 0);
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [children, size, onPageCount, onCurrentPage]);
+      // include children so first render also paginates; subsequent updates handled below
+    }, [docReady, size, children, onCurrentPage, onPageCount]);
 
-    // Track current page index while scrolling
+    // Re-paginate on children changes without remounting/unloading iframe
+    useEffect(() => {
+      if (!iframeRef.current?.contentDocument || !reactRootRef.current) return;
+      // update content
+      reactRootRef.current.render(<>{children}</>);
+      // debounce + serialize pagination
+      const t = setTimeout(runPagination, 0);
+      return () => clearTimeout(t);
+    }, [children]);
+
+    // Zoom scaling
+    useEffect(() => {
+      const doc = iframeRef.current?.contentDocument;
+      const vp = doc?.getElementById("paged-viewport") as HTMLElement | null;
+      if (vp) {
+        vp.style.transform = `scale(${scale})`;
+        vp.style.transformOrigin = "top left";
+      }
+    }, [scale]);
+
+    // Scroll → page index
     const onScroll = () => {
       const host = scrollHostRef.current;
-      const iframe = iframeRef.current;
-      if (!host || !iframe) return;
-      const doc = iframe.contentDocument;
+      const ifr = iframeRef.current;
+      if (!host || !ifr) return;
+      const doc = ifr.contentDocument;
       if (!doc) return;
+
       const first = doc.querySelector(".pagedjs_page") as HTMLElement | null;
       if (!first) return;
+
       const pageH = first.getBoundingClientRect().height * scale;
+      if (!pageH) return;
+
       const st = host.scrollTop;
-      const idx = Math.floor((st + 1) / Math.max(1, pageH + PAGE_GAP_PX * scale)) + 1;
+      const idx =
+        Math.floor((st + 1) / Math.max(1, pageH + PAGE_GAP_PX * scale)) + 1;
+
       onCurrentPage?.(Math.max(1, Math.min(pageCount, idx)));
     };
 
@@ -190,13 +288,8 @@ const IframePagedPreview = forwardRef<IframePagedPreviewHandle, IframePagedPrevi
         <iframe
           ref={iframeRef}
           title="resume-paged-iframe"
-          style={{
-            width: "calc(100% - 2px)",
-            height: "100%",
-            border: 0,
-            transform: `scale(${scale})`,
-            transformOrigin: "top left",
-          }}
+          srcDoc={srcDoc}
+          style={{ width: "calc(100% - 2px)", height: "100%", border: 0 }}
         />
       </div>
     );
