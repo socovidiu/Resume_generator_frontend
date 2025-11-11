@@ -6,7 +6,7 @@ import { useLogout } from "../hooks/useLogout";
 
 export default function Navbar() {
 
-    const { user, clearSession } = useAuth();
+    const { user } = useAuth();
     const doLogout = useLogout();
 
     // CV dropdown items 

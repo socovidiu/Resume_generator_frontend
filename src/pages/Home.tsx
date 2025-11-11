@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Button from "../components/ui-elements/Button"
 
@@ -14,7 +13,7 @@ const Home: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              🚀 CV Generator
+              Resume Generator
             </motion.h1>
             <p className="text-lg opacity-80 text-center max-w-lg">
                 Create, edit, and manage your CVs with ease. Start building your professional career today!

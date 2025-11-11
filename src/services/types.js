@@ -1,0 +1,2 @@
+// services/types.ts
+export {};

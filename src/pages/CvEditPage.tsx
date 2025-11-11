@@ -18,8 +18,12 @@ const steps = ["Contact Info", "Summary", "Work Experience", "Education", "Skill
 // ---------- Helpers ----------
 const LINK_TYPES = ["LinkedIn", "GitHub", "Website"] as const;
 type LinkType = (typeof LINK_TYPES)[number];
+
+function isLinkType(x: string): x is LinkType {
+  return (LINK_TYPES as readonly string[]).includes(x);
+}
 function asLinkType(t: string): LinkType {
-  return (LINK_TYPES as readonly string[]).includes(t as any) ? (t as LinkType) : "Website";
+  return isLinkType(t) ? t : "Website";
 }
 
 const resumeTemplates = ["Dark", "classic"]; // Placeholder for template selection
@@ -29,6 +33,23 @@ function toISO(dateStr?: string | null): string | undefined {
   if (!dateStr) return undefined;
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
+function errorMessage(e: unknown, fallback: string): string {
+  if (e && typeof e === "object") {
+    const obj = e as Record<string, unknown>;
+    const msg = obj["message"];
+    if (typeof msg === "string") return msg;
+
+    const resp = obj["response"] as Record<string, unknown> | undefined;
+    const data = resp?.["data"];
+    if (typeof data === "string") return data;
+    if (data && typeof data === "object") {
+      const dataMsg = (data as Record<string, unknown>)["message"];
+      if (typeof dataMsg === "string") return dataMsg;
+    }
+  }
+  return fallback;
 }
 
 // ---------- Initial form values ----------
@@ -57,7 +78,6 @@ const CvEditPage: React.FC = () => {
   // UI-only state controlled here (CvEditFormPanel will bubble updates)
   const [renderMode, setRenderMode] = useState<"react" | "markup">("react");
   const [selectedTemplate, setSelectedTemplate] = useState<string>(resumeTemplates[0]);
-  const [currentStep, setCurrentStep] = useState(0);
 
   // loading/saving/errors
   const [saving, setSaving] = useState(false);
@@ -83,7 +103,6 @@ const CvEditPage: React.FC = () => {
     (async () => {
       try {
         const data = await getCV(params.id!);
-
         if (!mounted) return;
 
         // Map API -> form shape
@@ -117,8 +136,8 @@ const CvEditPage: React.FC = () => {
 
         setInitialValues(mapped);
         setPreviewData(mapped);
-      } catch (e: any) {
-        setError(e?.response?.data ?? "Failed to load CV.");
+      } catch (e: unknown) {
+        setError(errorMessage(e, "Failed to load CV."));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -176,8 +195,8 @@ const CvEditPage: React.FC = () => {
         // keep preview in sync with what user sees after save
         setPreviewData(values);
       }
-    } catch (e: any) {
-      setError(e?.response?.data?.message ?? "Save failed.");
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Save failed."));
     } finally {
       setSaving(false);
     }
@@ -205,10 +224,9 @@ const CvEditPage: React.FC = () => {
           // keep preview live as the user types (if your panel implements this)
           onChange={(data: CVData) => setPreviewData(data)}
           // reflect UI-only bits (template/mode/step) from inside the panel
-          onUiChange={({ selectedTemplate: t, renderMode: m, step }) => {
+          onUiChange={({ selectedTemplate: t, renderMode: m }) => {
             setSelectedTemplate(t);
             setRenderMode(m);
-            setCurrentStep(step);
           }}
         />
       }

@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 
-// ---- Adjust these import paths to match your project structure ----
 import StepProgressBar from "./StepProgressBar";
 import ContactInfo from "./ContactInfo";
 import Summary from "./Summary";
@@ -10,12 +9,13 @@ import Education from "./Education";
 import Skills from "./Skills";
 import Review from "./Review";
 import Button from "../ui-elements/Button";
+import type { CVData } from "../../types/CVtype";
 
-// -------------------------------------------------------------------
 type RenderMode = "react" | "markup";
+type TemplateKey = "classic" | "modern" | "dark";
 
-// Shape of your overall CV form data (use your existing type if you have one)
-export type CvFormValues = any;
+// Use your real CV data type instead of `any`
+export type CvFormValues = CVData;
 
 type Props = {
   defaultValues?: Partial<CvFormValues>;
@@ -25,9 +25,9 @@ type Props = {
   isNew?: boolean;
 
   // callbacks
-  onSubmit?: (data: CvFormValues) => Promise<any> | void;
-  onChange?: (data: CvFormValues) => void; // emits on valid submit only; add live change if you want
-  onUiChange?: (ui: { selectedTemplate: string; renderMode: RenderMode; step: number }) => void;
+  onSubmit?: (data: CvFormValues) => Promise<void> | void;
+  onChange?: (data: CvFormValues) => void;
+  onUiChange?: (ui: { selectedTemplate: TemplateKey; renderMode: RenderMode; step: number }) => void;
 
   className?: string;
 };
@@ -43,7 +43,6 @@ export default function CvEditFormPanel({
   onUiChange,
   className,
 }: Props) {
-  // react-hook-form lives HERE now
   const {
     register,
     handleSubmit,
@@ -52,42 +51,49 @@ export default function CvEditFormPanel({
     watch,
     formState: { errors },
   } = useForm<CvFormValues>({
-    defaultValues: (defaultValues as CvFormValues) ?? {},
+    defaultValues: (defaultValues as CvFormValues) ?? ({} as CvFormValues),
     mode: "onSubmit",
   });
 
-  // wizard state + UI-only bits live HERE too
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [error, setError] = useState<string | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<"classic" | "modern" | "dark">("classic");
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>("classic");
   const [renderMode, setRenderMode] = useState<RenderMode>("react");
 
   const goBack = () => setCurrentStep((s) => Math.max(0, s - 1));
   const goNext = () => setCurrentStep((s) => Math.min(steps.length - 1, s + 1));
 
-  const submit: SubmitHandler<CvFormValues> = async (data) => {
-    setError(null);
-    try {
-      onChange?.(data);
-      await onSubmit?.(data);
-    } catch (e: any) {
-      setError(e?.message ?? "Something went wrong while saving.");
-    }
-  };
+  // Stable submit to satisfy hooks/exhaustive-deps
+  const submit: SubmitHandler<CvFormValues> = useCallback(
+    async (data) => {
+      setError(null);
+      try {
+        onChange?.(data);
+        await onSubmit?.(data);
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "Something went wrong while saving.";
+        setError(message);
+      }
+    },
+    [onChange, onSubmit]
+  );
 
   // bubble UI state up when it changes (useful for preview)
   React.useEffect(() => {
     onUiChange?.({ selectedTemplate, renderMode, step: currentStep });
   }, [selectedTemplate, renderMode, currentStep, onUiChange]);
 
+  // emit changes when form values update
   React.useEffect(() => {
     const sub = watch((data) => {
       onChange?.(data as CvFormValues);
     });
     return () => sub.unsubscribe();
   }, [watch, onChange]);
-  // memoized steps nodes (we still pass RHF bits to your existing step components)
+
+  // memoized steps nodes (RHF bits passed to step components)
   const stepNode = useMemo(() => {
     switch (currentStep) {
       case 0:
@@ -104,7 +110,14 @@ export default function CvEditFormPanel({
           />
         );
       case 1:
-        return <Summary register={register} errors={errors} handleSubmit={handleSubmit} onSubmit={submit} />;
+        return (
+          <Summary
+            register={register}
+            errors={errors}
+            handleSubmit={handleSubmit}
+            onSubmit={submit}
+          />
+        );
       case 2:
         return (
           <WorkExperience
@@ -150,7 +163,17 @@ export default function CvEditFormPanel({
       default:
         return null;
     }
-  }, [currentStep, register, errors, handleSubmit, control, setValue, submit, photo, watch]);
+  }, [
+    currentStep,
+    register,
+    errors,
+    handleSubmit,
+    control,
+    setValue,
+    submit, // now stable (useCallback)
+    photo,
+    watch,
+  ]);
 
   return (
     <div className={["w-full p-8 bg-white flex flex-col min-h-full", className || ""].join(" ")}>
@@ -193,7 +216,7 @@ export default function CvEditFormPanel({
         <select
           className="p-2 border rounded-lg bg-gray-100"
           value={selectedTemplate}
-          onChange={(e) => setSelectedTemplate(e.target.value as any)}
+          onChange={(e) => setSelectedTemplate(e.target.value as TemplateKey)}
         >
           <option value="classic">Classic</option>
           <option value="modern">Modern</option>

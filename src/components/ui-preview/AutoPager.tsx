@@ -2,7 +2,6 @@ import React, {
   useRef,
   useLayoutEffect,
   useEffect,
-  useMemo,
   useState,
   forwardRef,
 } from "react";
@@ -38,7 +37,7 @@ export type AutoPagerProps = {
   /** Optional extra class on the print root */
   className?: string;
   /** Recompute hint; bump this when data shape changes a lot */
-  depKey?: any;
+  depKey?: unknown;
   currentPage?: number | "all";
   screenOnlyCurrent?: boolean;
   onPagesChange?: (count: number) => void;

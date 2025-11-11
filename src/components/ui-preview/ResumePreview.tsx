@@ -36,6 +36,13 @@ const previewOverrides = `
 
 const mmToPx = (mm: number) => (mm * 96) / 25.4;
 
+// Allow CSS custom properties on style
+type PageCSSVars = React.CSSProperties & {
+  "--page-size"?: string;
+  "--page-w"?: string;
+  "--page-h"?: string;
+};
+
 const ResumePreview: React.FC<{ resumeData: CVData; template?: string }> = ({
   resumeData,
 }) => {
@@ -45,9 +52,11 @@ const ResumePreview: React.FC<{ resumeData: CVData; template?: string }> = ({
   const [size, setSize] = useState<PaperSize>("A4");
   const [zoom, setZoom] = useState<number>(100);
   const scale = useMemo(() => Math.max(0.25, Math.min(3, zoom / 100)), [zoom]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number | "all">("all");
   const [totalPages, setTotalPages] = useState(1);
+
   // Page dimensions (CSS px @96dpi)
   const pagePx = useMemo(
     () =>
@@ -66,18 +75,10 @@ const ResumePreview: React.FC<{ resumeData: CVData; template?: string }> = ({
   });
 
   // CSS custom props for @page size
-  const pageVars =
+  const pageVars: PageCSSVars =
     size === "A4"
-      ? ({
-          ["--page-size" as any]: "A4",
-          ["--page-w" as any]: "210mm",
-          ["--page-h" as any]: "297mm",
-        } as React.CSSProperties)
-      : ({
-          ["--page-size" as any]: "Letter",
-          ["--page-w" as any]: "8.5in",
-          ["--page-h" as any]: "11in",
-        } as React.CSSProperties);
+      ? { "--page-size": "A4", "--page-w": "210mm", "--page-h": "297mm" }
+      : { "--page-size": "Letter", "--page-w": "8.5in", "--page-h": "11in" };
 
   return (
     <div className="relative h-full grid grid-rows-[auto,1fr] gap-2 min-h-0">
@@ -111,14 +112,10 @@ const ResumePreview: React.FC<{ resumeData: CVData; template?: string }> = ({
           onPagesChange={setTotalPages}
         >
           {/* Your schema content */}
-          <div style={pageVars as React.CSSProperties}>
+          <div style={pageVars}>
             <ReactSchemaView schema={cvLayoutPro} data={data} />
           </div>
         </AutoPager>
-
-        {/* Optional small note */}
-        {/* <div className="text-xs text-gray-500 mt-2">{/* pages are shown above */}
-        {/*}</div> */}
       </div>
     </div>
   );

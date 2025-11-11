@@ -29,8 +29,21 @@ export default function LoginForm() {
         } else {
           setError(res.message || "Login failed");
         }
-      } catch (e: any) {
-        setError(e?.response?.data?.message ?? "Login failed");
+      } catch (err: unknown) {
+        let message = "Login failed";
+
+        // If this is an Error, prefer its message
+        if (err instanceof Error) {
+          message = err.message || message;
+        }
+
+        // Handle Axios-like errors without using `any`
+        if (typeof err === "object" && err !== null && "response" in err) {
+          const httpErr = err as { response?: { data?: { message?: string }; statusText?: string } };
+          message = httpErr.response?.data?.message ?? httpErr.response?.statusText ?? message;
+        }
+
+        setError(message);
       } finally {
         setLoading(false);
       }

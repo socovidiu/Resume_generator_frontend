@@ -4,37 +4,53 @@ import React from "react";
 export type SchemaNode = {
   id?: string;
   type: string;
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   children?: SchemaNode[] | ReadonlyArray<SchemaNode>;
   repeat?: string;
 };
 
 export type ReactSchema = { root: SchemaNode };
 
-type RenderCtx = { data: any };
+type RenderCtx = { data: unknown };
 type AsProp = { as?: React.ElementType };
 
+// Small helpers for type narrowing
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null;
+
+const isBindObj = (
+  v: unknown
+): v is { bind: string; default?: unknown } =>
+  isRecord(v) && typeof v.bind === "string";
+
+const hasItem = (v: unknown): v is { __item: unknown } =>
+  isRecord(v) && "__item" in v
 // -------- Helpers
-const get = (obj: any, path?: string, fallback?: any) => {
-  if (path === "." || path === "") return obj?.__item ?? obj ?? fallback; // support current item in repeats
+const get = (obj: unknown, path?: string, fallback?: unknown): unknown => {
+  if (path === "." || path === "") {
+    if (hasItem(obj)) return obj.__item; // local-only access, safely typed
+    return obj ?? fallback;
+  }
   if (!path) return fallback;
+
   return (
-    path.split(".").reduce((acc, key) => (acc == null ? acc : acc[key]), obj) ??
-    fallback
+    path.split(".").reduce<unknown>((acc, key) => {
+      if (!isRecord(acc)) return acc;
+      return acc[key];
+    }, obj) ?? fallback
   );
 };
-
-const coerce = (v: any): string => {
+const coerce = (v: unknown): string => {
   if (v == null) return "";
   if (typeof v === "string") return v;
   if (v instanceof String) return v.valueOf();
   if (v instanceof Number || v instanceof Boolean) return String(v.valueOf());
   if (Array.isArray(v)) return v.map(coerce).filter(Boolean).join(", ");
-  if (typeof v === "object") {
-    const keys = ["name", "label", "title", "text", "value"];
+  if (isRecord(v)) {
+    const keys = ["name", "label", "title", "text", "value"] as const;
     for (const k of keys) if (v[k] != null) return coerce(v[k]);
     try {
-      return String(v);
+      return String(v as unknown as object);
     } catch {
       return "";
     }
@@ -42,16 +58,19 @@ const coerce = (v: any): string => {
   return String(v);
 };
 
-const renderTemplateString = (s: string, data: any) =>
+const renderTemplateString = (s: string, data: unknown): string =>
   s.replace(/{{\s*([^}]+)\s*}}/g, (_, expr) =>
     coerce(get(data, expr.trim(), ""))
   );
 
-const resolveProps = (props: Record<string, any> = {}, data: any) => {
-  const out: Record<string, any> = {};
+const resolveProps = (
+  props: Record<string, unknown> = {},
+  data: unknown
+): Record<string, unknown> => {
+  const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(props)) {
-    if (v && typeof v === "object" && "bind" in v) {
-      out[k] = get(data, (v as any).bind, (v as any).default);
+    if (isBindObj(v)) {
+      out[k] = get(data, v.bind, v.default);
     } else if (typeof v === "string") {
       out[k] = renderTemplateString(v, data);
     } else {
@@ -103,27 +122,41 @@ function ImageEl({
 }: {
   src?: string | null;
   alt?: string;
-  [k: string]: any;
-}) {
+} & React.ImgHTMLAttributes<HTMLImageElement>) {
   if (!src) return null;
   return <img src={src} alt={alt ?? ""} {...rest} />;
 }
 
 // -------- Component map
-const COMPONENTS: Record<
-  string,
-  React.FC<{ node: SchemaNode; ctx: RenderCtx; children?: React.ReactNode }>
-> = {
+type CompProps = {
+  node: SchemaNode;
+  ctx: RenderCtx;
+  children?: React.ReactNode;
+};
+
+const COMPONENTS: Record<string, React.FC<CompProps>> = {
   stack: ({ node, ctx, children }) => {
+    const raw = resolveProps(node.props, ctx.data);
     const {
       className = "",
       style,
       gap = 8,
       noPageBlock,
       ...rest
-    } = resolveProps(node.props, ctx.data);
+    } = raw as {
+      className?: string;
+      style?: React.CSSProperties;
+      gap?: number;
+      noPageBlock?: boolean;
+    } & Record<string, unknown>;
+
     const content = (
-      <Stack className={className} style={style} gap={gap} {...rest}>
+      <Stack
+        className={className}
+        style={style}
+        gap={gap}
+        {...(rest as React.HTMLAttributes<HTMLDivElement>)}
+      >
         {children}
       </Stack>
     );
@@ -131,15 +164,27 @@ const COMPONENTS: Record<
   },
 
   row: ({ node, ctx, children }) => {
+    const raw = resolveProps(node.props, ctx.data);
     const {
       className = "",
       style,
       gap = 8,
       noPageBlock,
       ...rest
-    } = resolveProps(node.props, ctx.data);
+    } = raw as {
+      className?: string;
+      style?: React.CSSProperties;
+      gap?: number;
+      noPageBlock?: boolean;
+    } & Record<string, unknown>;
+
     const content = (
-      <Row className={className} style={style} gap={gap} {...rest}>
+      <Row
+        className={className}
+        style={style}
+        gap={gap}
+        {...(rest as React.HTMLAttributes<HTMLDivElement>)}
+      >
         {children}
       </Row>
     );
@@ -147,42 +192,67 @@ const COMPONENTS: Record<
   },
 
   text: ({ node, ctx }) => {
+    const raw = resolveProps(node.props, ctx.data);
     const {
       as = "p",
       className = "",
       style,
       children,
       ...rest
-    } = resolveProps(node.props, ctx.data);
+    } = raw as {
+      as?: React.ElementType;
+      className?: string;
+      style?: React.CSSProperties;
+      children?: unknown;
+    } & Record<string, unknown>;
+
     const content =
       typeof children === "string"
         ? renderTemplateString(children, ctx.data)
-        : children;
+        : (children as React.ReactNode);
+
     return (
-      <TextEl as={as} className={className} style={style} {...rest}>
+      <TextEl
+        as={as}
+        className={className}
+        style={style}
+        {...(rest as React.HTMLAttributes<HTMLElement>)}
+      >
         {content}
       </TextEl>
     );
   },
 
   heading: ({ node, ctx }) => {
+    const raw = resolveProps(node.props, ctx.data);
     const {
       level = 2,
       className = "",
       style,
       children,
       ...rest
-    } = resolveProps(node.props, ctx.data);
-    const tag = `h${Math.min(
-      6,
-      Math.max(1, Number(level))
-    )}` as unknown as React.ElementType;
+    } = raw as {
+      level?: number | string;
+      className?: string;
+      style?: React.CSSProperties;
+      children?: unknown;
+    } & Record<string, unknown>;
+
+    const levelNum = Math.min(6, Math.max(1, Number(level ?? 2)));
+    const tag = (`h${levelNum}`) as unknown as React.ElementType;
+
     const content =
       typeof children === "string"
         ? renderTemplateString(children, ctx.data)
-        : children;
+        : (children as React.ReactNode);
+
     return (
-      <TextEl as={tag} className={className} style={style} {...rest}>
+      <TextEl
+        as={tag}
+        className={className}
+        style={style}
+        {...(rest as React.HTMLAttributes<HTMLElement>)}
+      >
         {content}
       </TextEl>
     );
@@ -190,29 +260,55 @@ const COMPONENTS: Record<
 
   image: ({ node, ctx }) => {
     const props = resolveProps(node.props, ctx.data);
-    return <ImageEl {...props} />;
+    // Narrow common img props we care about, pass the rest as HTML attributes
+    const { src, alt, ...rest } = props as {
+      src?: string;
+      alt?: string;
+    } & Record<string, unknown>;
+    return (
+      <ImageEl
+        src={typeof src === "string" || src == null ? src : String(src)}
+        alt={typeof alt === "string" ? alt : undefined}
+        {...(rest as React.ImgHTMLAttributes<HTMLImageElement>)}
+      />
+    );
   },
 
   divider: ({ node, ctx }) => {
-    const { className = "" } = resolveProps(node.props, ctx.data);
+    const raw = resolveProps(node.props, ctx.data);
+    const { className = "" } = raw as { className?: string };
     return <Divider className={className} />;
   },
 
   box: ({ node, ctx, children }) => {
     const raw = resolveProps(node.props, ctx.data);
-    const { noPageBlock, ...props } = raw; // prevent leaking onto DOM
-    const content = <div {...props}>{children}</div>;
+    const { noPageBlock, ...props } = raw as {
+      noPageBlock?: boolean;
+    } & Record<string, unknown>; // prevent leaking onto DOM
+    const content = (
+      <div {...(props as React.HTMLAttributes<HTMLDivElement>)}>{children}</div>
+    );
     return noPageBlock ? content : <div>{content}</div>;
   },
 
   pageblock: ({ node, ctx, children }) => {
+    const raw = resolveProps(node.props, ctx.data);
     const {
       className = "",
       style,
       ...rest
-    } = resolveProps(node.props, ctx.data);
+    } = raw as {
+      className?: string;
+      style?: React.CSSProperties;
+    } & Record<string, unknown>;
+
     return (
-      <div data-page-block className={className} style={style} {...rest}>
+      <div
+        data-page-block
+        className={className}
+        style={style}
+        {...(rest as React.HTMLAttributes<HTMLDivElement>)}
+      >
         {children}
       </div>
     );
@@ -232,13 +328,16 @@ const RenderNode: React.FC<{ node: SchemaNode; ctx: RenderCtx }> = ({
 
   // Repeaters (keep root data like tokens; expose current item via __item)
   if (node.repeat) {
-    const items: any[] = get(ctx.data, node.repeat, []);
-    if (!Array.isArray(items)) return null;
+    const list = get(ctx.data, node.repeat, []);
+    if (!Array.isArray(list)) return null;
 
     return (
       <>
-        {items.map((item, idx) => {
-          const merged = { ...ctx.data, ...item, __item: item };
+        {(list as unknown[]).map((item, idx) => {
+          const merged = isRecord(item)
+            ? { ...(isRecord(ctx.data) ? ctx.data : {}), ...item, __item: item }
+            : { ...(isRecord(ctx.data) ? ctx.data : {}), __item: item };
+
           return (
             <div key={(node.id ?? node.type) + "-" + idx}>
               <Comp node={node} ctx={{ data: merged }}>
@@ -267,10 +366,8 @@ const RenderNode: React.FC<{ node: SchemaNode; ctx: RenderCtx }> = ({
 };
 
 // -------- Public component
-export const ReactSchemaView: React.FC<{ schema: ReactSchema; data: any }> = ({
-  schema,
-  data,
-}) => {
-  if (!schema?.root) return null;
-  return <RenderNode node={schema.root} ctx={{ data }} />;
-};
+export const ReactSchemaView: React.FC<{ schema: ReactSchema; data: unknown }> =
+  ({ schema, data }) => {
+    if (!schema?.root) return null;
+    return <RenderNode node={schema.root} ctx={{ data }} />;
+  };

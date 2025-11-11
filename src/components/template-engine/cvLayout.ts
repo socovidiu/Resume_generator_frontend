@@ -33,13 +33,19 @@ export const tokens: Tokens = {
 
 // ---------------- Helpers ----------------
 // Tiny helpers that return nodes of your ReactSchema tree
+export type SchemaNode = {
+  type: string;
+  props?: Record<string, unknown>;
+  children?: SchemaNode | SchemaNode[];
+  repeat?: string;
+};
 
 const SectionTitle = (title: string) => ({
   type: "text",
   props: { className: "{{tokens.sectionTitle}}", children: title },
 });
 
-const Card = (children: any) => ({
+const Card = (children: SchemaNode | SchemaNode[]): SchemaNode => ({
   type: "stack",
   props: { className: "rounded-2xl border p-4 shadow-sm", gap: { bind: "tokens.gapItem", default: 8 } },
   children,

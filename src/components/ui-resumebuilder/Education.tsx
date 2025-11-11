@@ -1,5 +1,5 @@
 import React from "react";
-import { UseFormRegister, FieldErrors, UseFormHandleSubmit, useFieldArray } from "react-hook-form";
+import { UseFormRegister, FieldErrors, UseFormHandleSubmit, useFieldArray, Control } from "react-hook-form";
 import { CVData } from "../../types/CVtype";
 
 interface EducationProps {
@@ -7,7 +7,7 @@ interface EducationProps {
     errors: FieldErrors<CVData>;
     handleSubmit: UseFormHandleSubmit<CVData>;
     onSubmit: (data: CVData) => void;
-    control: any; // Required for useFieldArray
+    control: Control<CVData>; // Required for useFieldArray
 }
 
 const Education: React.FC<EducationProps> = ({ register, errors, handleSubmit, onSubmit, control }) => {

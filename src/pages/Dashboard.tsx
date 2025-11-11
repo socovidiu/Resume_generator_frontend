@@ -15,9 +15,8 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const doLogout = useLogout();
 
-  // TODO: wire these with API later
-  const [loading, setLoading] = useState(false);
-  const resumes: ResumeItem[] = []; // put mock data here while wiring
+  // Mock data placeholder (you'll later replace with API)
+  const [resumes] = useState<ResumeItem[]>([]);
 
   const name = useMemo(() => {
     const raw = user?.username || user?.email || "there";
@@ -31,7 +30,6 @@ const Dashboard: React.FC = () => {
     return "Good evening";
   }, []);
 
-
   return (
     <div className="min-h-[calc(100vh-4rem)] w-full bg-gradient-to-br from-slate-50 via-white to-indigo-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
@@ -43,7 +41,7 @@ const Dashboard: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {greeting}, {name} 👋
+                {greeting}, {name} 
               </h1>
               <p className="text-gray-600">Build, edit, and export your resumes.</p>
             </div>
@@ -80,26 +78,27 @@ const Dashboard: React.FC = () => {
                 </button>
               </div>
 
-              {/* Content */}
               <div className="p-4 sm:p-5">
-                {loading ? (
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="rounded-lg border p-4 animate-pulse">
-                        <div className="h-4 w-1/2 bg-gray-200 rounded mb-2" />
-                        <div className="h-3 w-1/3 bg-gray-200 rounded mb-5" />
-                        <div className="h-8 w-full bg-gray-200 rounded" />
-                      </div>
-                    ))}
-                  </div>
-                ) : resumes.length === 0 ? (
+                {resumes.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-indigo-50 grid place-items-center">
-                      <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
+                      <svg
+                        className="h-6 w-6 text-indigo-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 6v12m6-6H6"
+                        />
                       </svg>
                     </div>
-                    <h3 className="font-semibold text-gray-900">Create your first resume</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      Create your first resume
+                    </h3>
                     <p className="text-sm text-gray-600 mt-1">
                       You don’t have any resumes yet.
                     </p>
@@ -113,7 +112,10 @@ const Dashboard: React.FC = () => {
                 ) : (
                   <div className="grid sm:grid-cols-2 gap-4">
                     {resumes.map((r) => (
-                      <article key={r.id} className="rounded-lg border p-4 hover:shadow transition">
+                      <article
+                        key={r.id}
+                        className="rounded-lg border p-4 hover:shadow transition"
+                      >
                         <div className="flex items-start justify-between">
                           <div>
                             <h3 className="font-medium text-gray-900">{r.title}</h3>
@@ -159,14 +161,18 @@ const Dashboard: React.FC = () => {
             {/* Templates spotlight */}
             <div className="rounded-2xl border bg-white shadow-sm">
               <div className="p-4 sm:p-5 border-b">
-                <h2 className="text-base sm:text-lg font-semibold">Templates spotlight</h2>
+                <h2 className="text-base sm:text-lg font-semibold">
+                  Templates spotlight
+                </h2>
               </div>
               <div className="p-4 sm:p-5">
                 <div className="flex gap-4 overflow-x-auto pb-1">
                   {["Classic", "Modern", "Compact"].map((t) => (
                     <button
                       key={t}
-                      onClick={() => navigate(`/templates?pick=${encodeURIComponent(t)}`)}
+                      onClick={() =>
+                        navigate(`/templates?pick=${encodeURIComponent(t)}`)
+                      }
                       className="min-w-[160px] rounded-xl border aspect-[3/4] overflow-hidden hover:shadow transition grid place-items-center"
                     >
                       <span className="text-sm text-gray-700">{t}</span>

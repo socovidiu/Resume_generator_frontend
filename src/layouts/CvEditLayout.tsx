@@ -29,7 +29,9 @@ export default function CvEditLayout({
 
   useEffect(() => {
     if (!rootRef.current) return;
-    const ro = new ResizeObserver(([entry]) => {
+      const ro = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      const entry = entries[0];
+      if (!entry) return;
       const { width, height } = entry.contentRect;
       setCw(width);
       setCh(height);
@@ -38,8 +40,8 @@ export default function CvEditLayout({
     return () => ro.disconnect();
   }, []);
 
-  const { previewW, previewHidden } = useMemo(() => {
-    if (!cw || !ch) return { previewW: 0, previewHidden: true };
+  const { previewW } = useMemo(() => {
+    if (!cw || !ch) return { previewW: 0 };
 
      // If preview rendered, what width would we like (preview gets wider as viewport grows)
     const w0 = 1200, w1 = 3000;                 // breakpoints
@@ -62,7 +64,6 @@ export default function CvEditLayout({
 
     return {
       previewW: tooNarrow || tooSmallScale ? 0 : w,
-      previewHidden: tooNarrow || tooSmallScale,
     };
   }, [cw, ch]);
 

@@ -4,6 +4,7 @@ import {
   FieldErrors,
   UseFormHandleSubmit,
   UseFormWatch,
+  UseFormSetValue
 } from "react-hook-form";
 import { CVData } from "../../types/CVtype";
 import {
@@ -18,37 +19,51 @@ interface ReviewProps {
   handleSubmit: UseFormHandleSubmit<CVData>;
   onSubmit: (data: CVData) => void;
   watch: UseFormWatch<CVData>;
-  setValue: (name: keyof CVData, value: any) => void;
+  setValue: UseFormSetValue<CVData>;
+}
+
+type UnknownRec = Record<string, unknown>;
+
+function str(v: unknown): string | null {
+  return typeof v === "string" ? v : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  return typeof v === "string" ? v : String(v);
+}
+
+function strArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.filter((x): x is string => typeof x === "string" && x.trim().length > 0);
 }
 
 /** CVData -> CanonicalProfile (uses your actual field names) */
 function useCanonicalProfile(watch: UseFormWatch<CVData>): CanonicalProfile {
-  // Basic identity
   const firstName = watch("firstName");
-  const lastName = watch("lastName");
-  const jobTitle = watch("jobTitle");
-  const summary = watch("summary");
+  const lastName  = watch("lastName");
+  const jobTitle  = watch("jobTitle");
+  const summary   = watch("summary");
 
-  // Arrays (default to empty arrays if undefined)
-  const skills = (watch("skills") ?? []) as string[];
-  const workExperiences = (watch("workExperiences") ?? []) as any[];
-  const educations = (watch("educations") ?? []) as any[];
+  const skills = Array.isArray(watch("skills")) ? (watch("skills") as string[]) : [];
 
-  // Build "name"
+  const workExperiences = (watch("workExperiences") ?? []) as UnknownRec[];
+  const educations      = (watch("educations") ?? []) as UnknownRec[];
+
   const name = [firstName, lastName].filter(Boolean).join(" ").trim();
 
-  // Experience mapping: normalize common field variants
   const experience = workExperiences.map((w) => {
-    const company = w?.company ?? w?.employer ?? "";
-    const role = w?.title ?? w?.position ?? jobTitle ?? "";
-    const start = w?.startDate ?? w?.from ?? null;
-    const end = w?.endDate ?? w?.to ?? null;
+    const company = str(w.company) ?? str(w.employer) ?? "";
+    const role    = str(w.title) ?? str(w.position) ?? jobTitle ?? "";
+    const start   = strOrNull(w.startDate) ?? strOrNull(w.from);
+    const end     = strOrNull(w.endDate) ?? strOrNull(w.to);
 
-    // Bullets: pick best available source and split if needed
+    const rawBullets =
+      (w.bullets ?? w.responsibilities ?? w.highlights ?? w.description) as unknown;
+
     let bullets: string[] = [];
-    const rawBullets = w?.bullets ?? w?.responsibilities ?? w?.highlights ?? w?.description ?? [];
     if (Array.isArray(rawBullets)) {
-      bullets = rawBullets.filter(Boolean);
+      bullets = strArray(rawBullets);
     } else if (typeof rawBullets === "string") {
       bullets = rawBullets
         .split(/\r?\n|•|- /)
@@ -59,16 +74,16 @@ function useCanonicalProfile(watch: UseFormWatch<CVData>): CanonicalProfile {
     return { company, role, start, end, bullets };
   });
 
-  // Education mapping
   const education = educations.map((ed) => {
-    const school = ed?.school ?? ed?.institution ?? "";
-    const degree = ed?.degree ?? ed?.qualification ?? null;
+    const school = str(ed.school) ?? str(ed.institution) ?? "";
+    const degree = strOrNull(ed.degree) ?? strOrNull(ed.qualification);
+
     const year =
-      ed?.year ??
-      ed?.graduationYear ??
-      ed?.endDate ??
-      (typeof ed?.date === "string" ? ed.date : null) ??
-      null;
+      strOrNull(ed.year) ??
+      strOrNull(ed.graduationYear) ??
+      strOrNull(ed.endDate) ??
+      (typeof ed.date === "string" ? ed.date : strOrNull(ed.date));
+
     return { school, degree, year };
   });
 
@@ -76,11 +91,12 @@ function useCanonicalProfile(watch: UseFormWatch<CVData>): CanonicalProfile {
     name,
     title: jobTitle ?? "",
     summary: summary ?? "",
-    skills: Array.isArray(skills) ? skills : [],
+    skills,
     experience,
     education,
   };
 }
+
 
 const Review: React.FC<ReviewProps> = ({ handleSubmit, onSubmit, watch }) => {
   // ---- UI-only local state (NOT part of the form) ----
@@ -117,8 +133,9 @@ const Review: React.FC<ReviewProps> = ({ handleSubmit, onSubmit, watch }) => {
       setLoadingKW(true);
       const res = await extractKeywords({ job_description: jd });
       setKw(res ?? null);
-    } catch (e: any) {
-      alert(e?.message || "Failed to extract keywords");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to extract keywords";
+      alert(msg);
     } finally {
       setLoadingKW(false);
     }
@@ -135,8 +152,9 @@ const Review: React.FC<ReviewProps> = ({ handleSubmit, onSubmit, watch }) => {
         role: role || undefined,
       });
       setCoverLetter(res?.cover_letter ?? "");
-    } catch (e: any) {
-      alert(e?.message || "Failed to generate cover letter");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to generate cover letter";
+      alert(msg);
     } finally {
       setLoadingCL(false);
     }

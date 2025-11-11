@@ -7,17 +7,20 @@ import {
   Control,
   useFieldArray,
   UseFormSetValue,
+  FieldArrayWithId,
 } from "react-hook-form";
 import { CVData } from "../../types/CVtype";
-import { Field, Input, Textarea, Select } from "../ui-elements/Form"; 
+import { Field, Input, Select } from "../ui-elements/Form";
 
+/** Infer the shape of a single link item from CVData */
+type LinkItem = NonNullable<CVData["links"]>[number];
 
 interface ContactInfoProps {
   register: UseFormRegister<CVData>;
   errors: FieldErrors<CVData>;
   handleSubmit: UseFormHandleSubmit<CVData>;
-  control: Control<CVData>;                 // 👈 NEW: pass control from parent useForm
-  setValue: UseFormSetValue<CVData>;        // 👈 NEW: to keep photo in form data
+  control: Control<CVData>;
+  setValue: UseFormSetValue<CVData>;
   onSubmit: (cvData: CVData) => void;
   photo: string | null;
   setPhoto: (photo: string | null) => void;
@@ -33,8 +36,8 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
   photo,
   setPhoto,
 }) => {
-  // RHF-managed links array
-  const { fields, append, remove } = useFieldArray({
+  // RHF-managed links array (fully typed)
+  const { fields, append, remove } = useFieldArray<CVData, "links">({
     control,
     name: "links",
   });
@@ -42,7 +45,8 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
   // Ensure at least one link row exists (optional)
   useEffect(() => {
     if (fields.length === 0) {
-      append({ type: "LinkedIn", url: "" });
+      const first: LinkItem = { type: "LinkedIn", url: "" };
+      append(first);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -51,7 +55,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
   useEffect(() => {
     const clean = photo && photo.trim() !== "" ? photo : null;
     setValue("photo", clean, { shouldValidate: false, shouldDirty: true });
-}, [photo, setValue]);
+  }, [photo, setValue]);
 
   // Handle file selection for photo (keeps your preview approach)
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +71,6 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
       onSubmit={handleSubmit((data) => onSubmit(data))}
       className="form-shell"
     >
-      
       {/* ---------- Header ---------- */}
       <div>
         <h2 className="text-xl font-semibold text-gray-900">Contact Information</h2>
@@ -185,16 +188,16 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
           />
         </Field>
       </div>
-      
+
       {/* Links (RHF-managed) */}
       <div className="form-section">
         <label className="block text-sm font-medium text-gray-800">Links</label>
 
-        {fields.map((field, index) => {
-          // helpful dynamic id bases for a11y
+        {fields.map((field: FieldArrayWithId<CVData, "links", "id">, index) => {
           const typeId = `links.${index}.type`;
           const urlId = `links.${index}.url`;
-          const urlError = (errors as any)?.links?.[index]?.url?.message as string | undefined;
+          const linkType = field.type ?? "LinkedIn";
+          const urlError = errors.links?.[index]?.url?.message as string | undefined;
 
           return (
             <div
@@ -207,7 +210,7 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
                   <Field label="Type" htmlFor={typeId}>
                     <Select
                       id={typeId}
-                      defaultValue={(field as any).type ?? "LinkedIn"}
+                      defaultValue={linkType}
                       {...register(`links.${index}.type` as const)}
                     >
                       <option value="LinkedIn">LinkedIn</option>
@@ -229,13 +232,13 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
                       id={urlId}
                       type="url"
                       placeholder={
-                        ((field as any).type ?? "LinkedIn") === "GitHub"
+                        linkType === "GitHub"
                           ? "https://github.com/username"
-                          : ((field as any).type ?? "LinkedIn") === "Website"
+                          : linkType === "Website"
                           ? "https://yourdomain.com"
                           : "https://linkedin.com/in/username"
                       }
-                      defaultValue={(field as any).url ?? ""}
+                      defaultValue={field.url ?? ""}
                       {...register(`links.${index}.url` as const, {
                         pattern: {
                           value: /^https?:\/\//i,
@@ -265,13 +268,12 @@ const ContactInfo: React.FC<ContactInfoProps> = ({
 
         <button
           type="button"
-          onClick={() => append({ type: "LinkedIn", url: "" })}
+          onClick={() => append({ type: "LinkedIn", url: "" } as LinkItem)}
           className="text-sm font-medium text-blue-700 hover:text-blue-800 hover:underline"
         >
           + Add another link
         </button>
       </div>
-
     </form>
   );
 };

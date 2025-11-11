@@ -1,6 +1,5 @@
 import React from "react";
 import FormField from "./fields/FormField";
-import PasswordField from "./fields/PasswordField";
 
 export type ProfileValues = {
   firstName: string; lastName: string; headline: string; location: string;
