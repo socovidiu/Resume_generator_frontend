@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import FormField from "./fields/FormField";
 import PasswordField from "./fields/PasswordField";
+import { signup } from "../../services/auth";
+import { useAuth } from "../../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function SignupForm() {
+
+  const { setSession } = useAuth();
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -17,8 +24,16 @@ export default function SignupForm() {
     setError(null);
 
     try {
-      // const res = await signup({ username, email, password });
-      // handle session + navigate…
+      const res = await signup({ username, email, password });
+
+      if (!res || !res.token || !res.user) {
+        setError(res?.message || "Sign up failed");
+        return;
+      }
+      // Save session → AuthContext
+      setSession(res.token, res.user);
+      // Redirect
+      navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
       // Safely narrow and log if desired
       if (err instanceof Error) {
